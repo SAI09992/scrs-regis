@@ -204,7 +204,7 @@ export default function AdminRegistrationsPage() {
                       </span>
                     </td>
                     <td className="p-4">
-                      <StatusBadge status={r.paymentStatus || 'pending'} />
+                      <StatusBadge status={r.paymentStatus || 'unpaid'} />
                     </td>
                     <td className="p-4 text-cyber-text-dim">{formatDate(r.createdAt)}</td>
                     <td className="p-4 text-center">

@@ -22,6 +22,13 @@ export function StatusBadge({ status, className, showIcon = true }: StatusBadgeP
           dot: 'bg-emerald-400',
           icon: CheckCircle2,
         };
+      case 'unpaid':
+        return {
+          label: 'AWAITING PAYMENT',
+          bg: 'bg-cyan-950/60 border-cyan-500/50 text-cyan-400',
+          dot: 'bg-cyan-400 animate-pulse',
+          icon: Clock,
+        };
       case 'pending':
         return {
           label: 'UNDER VERIFICATION',
