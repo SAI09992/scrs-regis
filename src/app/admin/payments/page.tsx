@@ -399,18 +399,54 @@ export default function AdminPaymentsPage() {
                   })()}
                 </div>
 
-                {/* Right: Payment Evidence Screenshot */}
+                {/* Right: Payment Evidence Screenshot & Blob Link Controls */}
                 <div className="md:col-span-6 space-y-3">
-                  <div className="text-cyber-primary font-bold text-xs uppercase tracking-wider">
-                    PAYMENT EVIDENCE (SCREENSHOT)
+                  <div className="text-cyber-primary font-bold text-xs uppercase tracking-wider flex items-center justify-between">
+                    <span>PAYMENT EVIDENCE (SCREENSHOT)</span>
+                    <a
+                      href={selectedPayment.screenshotUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] text-cyber-primary hover:underline flex items-center gap-1 font-mono"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>OPEN IN NEW TAB</span>
+                    </a>
                   </div>
+                  
                   <div className="p-2 rounded-xl bg-black border border-cyber-border text-center overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={selectedPayment.screenshotUrl}
                       alt="Payment Evidence"
-                      className="max-h-64 mx-auto rounded object-contain"
+                      className="max-h-56 mx-auto rounded object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                      onClick={() => window.open(selectedPayment.screenshotUrl, '_blank')}
+                      title="Click to view full-resolution image"
                     />
+                  </div>
+
+                  {/* Direct Blob URL Copy Bar */}
+                  <div className="p-2 rounded-lg bg-cyber-surface/60 border border-cyber-border space-y-1 text-[10px] font-mono">
+                    <span className="text-cyber-text-dim font-bold block">DIRECT BLOB IMAGE URL:</span>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        readOnly
+                        value={selectedPayment.screenshotUrl}
+                        className="flex-1 px-2.5 py-1 rounded bg-cyber-bg border border-cyber-border text-cyber-primary font-mono text-[10px] truncate select-all focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedPayment.screenshotUrl);
+                          toast.success('✓ Blob image URL copied to clipboard');
+                        }}
+                        className="px-2.5 py-1 rounded bg-cyber-primary/20 hover:bg-cyber-primary/30 text-cyber-primary font-bold border border-cyber-primary/40 transition-colors flex items-center gap-1 shrink-0"
+                      >
+                        <Copy className="w-3 h-3" />
+                        <span>COPY</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
