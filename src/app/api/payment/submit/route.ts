@@ -83,11 +83,26 @@ export async function POST(req: NextRequest) {
     const expectedAmount = (settings as any).registrationFee || 300;
 
     // 5. Run OCR Analysis on screenshot
-    const ocrResult = await analyzePaymentScreenshot(
+    let ocrResult = await analyzePaymentScreenshot(
       validatedData.screenshotUrl,
       validatedData.utr.trim().toUpperCase(),
       validatedData.amount
     );
+
+    // Fallback: If server-side OCR failed (e.g. Google Vision billing disabled),
+    // use client-side browser OCR text if available
+    if (
+      (!ocrResult.ocrUtr || ocrResult.ocrConfidence === 0) &&
+      validatedData.clientOcrText &&
+      validatedData.clientOcrText.trim().length > 5
+    ) {
+      const { parseTransactionText } = await import('@/lib/ocr');
+      ocrResult = parseTransactionText(
+        validatedData.clientOcrText,
+        validatedData.utr.trim().toUpperCase(),
+        validatedData.amount
+      );
+    }
 
     // 6. Insert or Update Payment Record
     const paymentId = existingPayment.length > 0 ? existingPayment[0].id : `pay_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;

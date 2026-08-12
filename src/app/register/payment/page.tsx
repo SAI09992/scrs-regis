@@ -30,6 +30,8 @@ function PaymentContent() {
   const [uploading, setUploading] = useState(false);
   const [scannerActive, setScannerActive] = useState(false);
   const [ocrResult, setOcrResult] = useState<any>(null);
+  const [clientOcrText, setClientOcrText] = useState<string>('');
+  const [ocrScanning, setOcrScanning] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -66,8 +68,8 @@ function PaymentContent() {
     setTimeout(() => setCopiedUpi(false), 2500);
   };
 
-  // Image File Selection
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Image File Selection + Browser-side OCR
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
 
@@ -82,6 +84,25 @@ function PaymentContent() {
     };
     reader.readAsDataURL(selected);
     setFile(selected);
+
+    // Run browser-side OCR using Tesseract.js
+    setOcrScanning(true);
+    setClientOcrText('');
+    try {
+      const { createWorker } = await import('tesseract.js');
+      const worker = await createWorker('eng');
+      const ret = await worker.recognize(selected);
+      const detectedText = ret.data.text || '';
+      setClientOcrText(detectedText);
+      await worker.terminate();
+      if (detectedText.trim().length > 10) {
+        toast.success('Screenshot text extracted successfully');
+      }
+    } catch (err) {
+      console.warn('Browser OCR failed (non-critical):', err);
+    } finally {
+      setOcrScanning(false);
+    }
   };
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
@@ -120,7 +141,7 @@ function PaymentContent() {
 
       const screenshotUrl = uploadData.url;
 
-      // 2. Submit payment
+      // 2. Submit payment (with browser-extracted OCR text)
       const submitRes = await fetch('/api/payment/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -129,6 +150,7 @@ function PaymentContent() {
           utr: utr.trim().toUpperCase(),
           amount: feeAmount,
           screenshotUrl,
+          clientOcrText: clientOcrText || null,
         }),
       });
 
@@ -345,6 +367,20 @@ function PaymentContent() {
                       </div>
                     )}
                   </div>
+
+                  {/* OCR Scanning Indicator */}
+                  {ocrScanning && (
+                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-cyan-950/40 border border-cyber-primary/40 text-cyber-primary text-[11px] font-mono animate-pulse">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Extracting text from screenshot (browser OCR)...</span>
+                    </div>
+                  )}
+                  {!ocrScanning && clientOcrText && clientOcrText.trim().length > 10 && (
+                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-emerald-400 text-[11px] font-mono">
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Screenshot text extracted — UTR will be auto-verified on submission</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* SUBMIT BUTTON */}
