@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/db';
-import { registrations, payments, attendance, certificates } from '@/db/schema';
+import { registrations, payments, attendance, certificates, users } from '@/db/schema';
 import { getCurrentUser } from '@/lib/auth';
-import { eq } from 'drizzle-orm';
+import { eq, or, sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -13,11 +13,30 @@ export async function GET() {
       return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
     }
 
-    // 1. Fetch Registration
+    const userEmail = user.email ? user.email.trim().toLowerCase() : '';
+
+    // 1. Resolve dbUser by email or user.id
+    const dbUserList = userEmail
+      ? await db
+          .select()
+          .from(users)
+          .where(or(eq(users.id, user.id), sql`LOWER(${users.email}) = ${userEmail}`))
+          .limit(1)
+      : [];
+
+    const dbUserId = dbUserList.length > 0 ? dbUserList[0].id : user.id;
+
+    // 2. Fetch Registration matching userId or email
     const regList = await db
       .select()
       .from(registrations)
-      .where(eq(registrations.userId, user.id))
+      .where(
+        or(
+          eq(registrations.userId, user.id),
+          eq(registrations.userId, dbUserId),
+          userEmail ? sql`LOWER(${registrations.email}) = ${userEmail}` : undefined
+        )
+      )
       .limit(1);
 
     if (regList.length === 0) {
@@ -32,7 +51,7 @@ export async function GET() {
 
     const registration = regList[0];
 
-    // 2. Fetch Payment
+    // 3. Fetch Payment matching registration.id
     const payList = await db
       .select()
       .from(payments)
@@ -41,13 +60,13 @@ export async function GET() {
 
     const payment = payList[0] || null;
 
-    // 3. Fetch Attendance
+    // 4. Fetch Attendance
     const attList = await db
       .select()
       .from(attendance)
       .where(eq(attendance.registrationId, registration.id));
 
-    // 4. Fetch Certificate
+    // 5. Fetch Certificate
     const certList = await db
       .select()
       .from(certificates)
