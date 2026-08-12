@@ -32,7 +32,7 @@ const infoItems = [
   {
     icon: GraduationCap,
     title: 'Eligibility & Prerequisites',
-    desc: 'Open to all 2nd, 3rd, and 4th year engineering students across all departments. Basic computer knowledge is recommended.',
+    desc: 'Open to all 3rd and 4th year engineering students across all departments. Basic computer knowledge is recommended.',
   },
   {
     icon: Award,

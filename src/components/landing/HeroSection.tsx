@@ -62,7 +62,7 @@ export default function HeroSection() {
 
             {/* Concise Description */}
             <p className="text-xs sm:text-base text-cyber-text-muted max-w-2xl leading-relaxed">
-              An intensive two-day hands-on cybersecurity and SOC workshop for all engineering students (2nd, 3rd & 4th year). Dive into SIEM log telemetry, live packet forensics, memory threat hunting, and ransomware incident response at TIFAC Core Seminar Hall.
+              An intensive two-day hands-on cybersecurity and SOC workshop for all engineering students (3rd & 4th year). Dive into SIEM log telemetry, live packet forensics, memory threat hunting, and ransomware incident response at TIFAC Core Seminar Hall.
             </p>
 
             {/* 4 Metadata Badges */}

@@ -18,7 +18,7 @@ const overviewPoints = [
   {
     icon: Users,
     title: 'WHO IS IT FOR?',
-    desc: 'All 2nd, 3rd, and 4th year engineering students across all departments — CSE, IT, ECE, EEE, Mech, Civil, and all allied branches.',
+    desc: 'All 3rd and 4th year engineering students across all departments — CSE, IT, ECE, EEE, Mech, Civil, and all allied branches.',
   },
   {
     icon: Terminal,
@@ -52,9 +52,9 @@ export default function EventOverviewSection() {
             return (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                initial={{ opacity: 0, scale: 0.8, x: idx % 2 === 0 ? -50 : 50, filter: 'blur(10px)' }}
+                whileInView={{ opacity: 1, scale: 1, x: 0, filter: 'blur(0px)' }}
+                viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: idx * 0.1, duration: 0.5 }}
                 whileHover={{ y: -3 }}
                 className="p-6 rounded-2xl cyber-glass border border-cyber-border hover:border-cyber-primary/50 transition-all duration-300 space-y-3 flex flex-col justify-between"

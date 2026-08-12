@@ -82,9 +82,9 @@ export default function WhatYouLearnSection() {
             return (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
+                initial={{ opacity: 0, y: 40, scale: 0.9, rotateX: 15, filter: 'blur(10px)' }}
+                whileInView={{ opacity: 1, y: 0, scale: 1, rotateX: 0, filter: 'blur(0px)' }}
+                viewport={{ once: true, margin: "-50px" }}
                 transition={{ delay: idx * 0.05, duration: 0.4 }}
                 whileHover={{ y: -4 }}
                 className="p-6 rounded-2xl cyber-glass border border-cyber-border hover:border-cyber-primary/60 transition-all duration-300 space-y-3 flex flex-col justify-between group font-mono"

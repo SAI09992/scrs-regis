@@ -54,7 +54,7 @@ export default function CreditTypeSection() {
               NEXTGEN SOC BOOTCAMP
             </h3>
             <p className="text-xs sm:text-sm font-mono text-cyber-text-muted">
-              Open to all 2nd, 3rd & 4th year students across all departments.
+              Open to all 3rd & 4th year students across all departments.
             </p>
 
             <div className="flex items-baseline gap-2 pt-2 pb-4 border-b border-cyber-border/60">

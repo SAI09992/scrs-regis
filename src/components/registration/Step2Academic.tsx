@@ -94,8 +94,8 @@ export default function Step2Academic({ form }: Props) {
             className="w-full px-3.5 py-2.5 rounded-lg bg-cyber-surface border border-cyber-border text-cyber-text text-sm focus:outline-none focus:border-cyber-primary transition-colors font-mono"
           >
             <option value="">Select Department</option>
-            <option value="CSE">CSE (Computer Science & Engineering)</option>
-            <option value="Other">Other (Specify manually)</option>
+            <option value="CSE">CSE - PE (Professional Elective)</option>
+            <option value="Other">Others - UE (University Elective)</option>
           </select>
           {errors.department && !deptChoice && (
             <p className="text-[11px] text-red-400">{errors.department.message}</p>
@@ -132,7 +132,6 @@ export default function Step2Academic({ form }: Props) {
             className="w-full px-3.5 py-2.5 rounded-lg bg-cyber-surface border border-cyber-border text-cyber-text text-sm focus:outline-none focus:border-cyber-primary transition-colors"
           >
             <option value="">Select your year</option>
-            <option value="2nd Year">2nd Year</option>
             <option value="3rd Year">3rd Year</option>
             <option value="4th Year">4th Year</option>
           </select>

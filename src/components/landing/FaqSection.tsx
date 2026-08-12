@@ -15,7 +15,7 @@ const faqs = [
   },
   {
     q: 'Who can register?',
-    a: 'All 2nd, 3rd, and 4th year engineering students from any department (CSE, IT, ECE, EEE, Mech, Civil, and all other branches) can register.',
+    a: 'All 3rd and 4th year engineering students from any department (CSE, IT, ECE, EEE, Mech, Civil, and all other branches) can register.',
   },
   {
     q: 'How much is the registration fee?',

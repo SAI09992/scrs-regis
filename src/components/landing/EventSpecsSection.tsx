@@ -22,7 +22,7 @@ export default function EventSpecsSection() {
     venue: 'TIFAC Core Seminar Hall',
     fee: 300,
     certificate: 'Participation Certificate',
-    eligibility: 'All Departments — 2nd, 3rd & 4th Year',
+    eligibility: 'All Departments — 3rd & 4th Year',
     totalSlots: 200,
   };
 
