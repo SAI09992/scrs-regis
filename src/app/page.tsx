@@ -18,7 +18,7 @@ import PreloaderWrapper from '@/components/animations/PreloaderWrapper';
 
 export default function LandingPage() {
   return (
-    <main className="relative min-h-screen text-cyber-text overflow-x-hidden selection:bg-cyber-primary selection:text-cyber-bg bg-cyber-bg">
+    <main className="relative min-h-screen text-cyber-text overflow-x-hidden selection:bg-cyber-primary selection:text-cyber-bg">
       <PreloaderWrapper>
         {/* Structured Landing Page Flow */}
         <div className="relative z-10 flex flex-col min-h-screen">
