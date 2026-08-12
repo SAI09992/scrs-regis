@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RadarSphere3D from './RadarSphere3D';
-import { BrandLogo } from '@/components/ui/BrandLogo';
 
 interface PreloaderProps {
   onComplete: () => void;
@@ -168,8 +167,8 @@ export default function CinematicPreloader({ onComplete }: PreloaderProps) {
               transition={{ duration: 0.8, type: 'spring', bounce: 0.5 }}
               className="mb-8 flex flex-col items-center"
             >
-              <div className="w-24 h-24 bg-cyber-bg/90 border border-cyber-primary backdrop-blur-md rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(16,185,129,0.4)]">
-                <BrandLogo variant="icon-only" withLink={false} />
+              <div className="w-24 h-24 bg-cyber-bg/90 border border-cyber-primary backdrop-blur-md rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(16,185,129,0.4)] overflow-hidden p-1">
+                <img src="/scrs-logo.png" alt="SCRS Logo" className="w-full h-full object-contain filter drop-shadow-[0_0_15px_rgba(0,229,255,0.6)]" />
               </div>
             </motion.div>
 
