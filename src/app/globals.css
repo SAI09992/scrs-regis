@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 215 50% 4%;
+    --foreground: 210 40% 98%;
+
+    --card: 217 33% 8%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 217 33% 8%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 187 100% 50%;
+    --primary-foreground: 215 50% 4%;
+
+    --secondary: 206 87% 53%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217 33% 14%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 187 100% 50%;
+    --accent-foreground: 215 50% 4%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217 33% 18%;
+    --input: 217 33% 18%;
+    --ring: 187 100% 50%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-cyber-bg text-cyber-text font-sans antialiased selection:bg-cyber-primary/20 selection:text-cyber-primary;
+    background-color: #050A0F;
+    color: #E2E8F0;
+    overflow-x: hidden;
+  }
+}
+
+/* Custom Cyber Scrollbars */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050A0F;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1E2D40;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00E5FF88;
+}
+
+/* Cyber Grid Effect */
+.cyber-grid-bg {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 229, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 229, 255, 0.05) 1px, transparent 1px);
+}
+
+.cyber-dots-bg {
+  background-image: radial-gradient(rgba(0, 229, 255, 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Glassmorphism Surface */
+.cyber-glass {
+  background: rgba(15, 23, 32, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(30, 45, 64, 0.8);
+}
+
+.cyber-glass-glow {
+  background: rgba(15, 23, 32, 0.85);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  box-shadow: 0 0 30px -10px rgba(0, 229, 255, 0.2);
+}
+
+/* Scanline Effect */
+.scanline-overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0, 229, 255, 0.02) 50%,
+    rgba(0, 229, 255, 0.02)
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+}
+
+/* Monospace Numbers */
+.font-mono-numbers {
+  font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+  font-feature-settings: 'tnum' on, 'zero' on;
+}
