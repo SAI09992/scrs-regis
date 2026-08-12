@@ -5,6 +5,7 @@ import { requireAdmin } from '@/lib/auth';
 import { logAdminAction } from '@/lib/audit';
 import { broadcastRealtimeEvent } from '@/lib/realtime';
 import { desc, eq, or, sql } from 'drizzle-orm';
+import { del } from '@vercel/blob';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,6 +72,22 @@ export async function DELETE(req: NextRequest) {
     const reg = existing[0];
 
     // Cascade delete all associated dependencies
+
+    // First, cleanup Vercel Blob if a payment screenshot exists
+    const existingPayment = await db
+      .select()
+      .from(payments)
+      .where(eq(payments.registrationId, reg.id))
+      .limit(1);
+
+    if (existingPayment.length > 0 && existingPayment[0].paymentScreenshotUrl) {
+      try {
+        await del(existingPayment[0].paymentScreenshotUrl);
+      } catch (err) {
+        console.error('Failed to delete blob from vercel storage:', err);
+      }
+    }
+
     await db.delete(attendance).where(eq(attendance.registrationId, reg.id));
     await db.delete(payments).where(eq(payments.registrationId, reg.id));
     await db.delete(certificates).where(eq(certificates.registrationId, reg.id));

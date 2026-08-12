@@ -4,6 +4,8 @@ import { registrations, payments, attendance } from '@/db/schema';
 import { requireAdmin } from '@/lib/auth';
 import { eq } from 'drizzle-orm';
 
+import * as XLSX from 'xlsx';
+
 export async function GET(req: NextRequest) {
   try {
     await requireAdmin();
@@ -26,55 +28,41 @@ export async function GET(req: NextRequest) {
           paymentStatus: payments.status,
           utr: payments.utr,
           amount: payments.amount,
+          paymentScreenshotUrl: payments.paymentScreenshotUrl,
           createdAt: registrations.createdAt,
         })
         .from(registrations)
         .leftJoin(payments, eq(registrations.id, payments.registrationId));
 
-      const headers = [
-        'Registration ID',
-        'Name',
-        'Email',
-        'Phone',
-        'Register Number',
-        'Department',
-        'Year',
-        'Section',
-        'College',
-        'Credit Type',
-        'Payment Status',
-        'UTR',
-        'Amount (INR)',
-        'Registered At',
-      ];
+      const excelData = records.map(r => ({
+        'Registration ID': r.registrationId,
+        'Name': r.name,
+        'Email': r.email,
+        'Phone': r.phone,
+        'Register Number': r.registerNumber,
+        'Department': r.department,
+        'Year': r.year,
+        'Section': r.section,
+        'College': r.college,
+        'Credit Type': r.creditType,
+        'Payment Status': r.paymentStatus || 'unpaid',
+        'UTR': r.utr || '',
+        'Amount (INR)': r.amount || 0,
+        'Registered At': new Date(r.createdAt).toLocaleString(),
+        'Screenshot Blob Link': r.paymentScreenshotUrl || ''
+      }));
 
-      const csvRows = [headers.join(',')];
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Registrations');
 
-      for (const r of records) {
-        csvRows.push(
-          [
-            `"${r.registrationId}"`,
-            `"${r.name.replace(/"/g, '""')}"`,
-            `"${r.email}"`,
-            `"${r.phone}"`,
-            `"${r.registerNumber}"`,
-            `"${r.department}"`,
-            `"${r.year}"`,
-            `"${r.section}"`,
-            `"${r.college.replace(/"/g, '""')}"`,
-            `"${r.creditType}"`,
-            `"${r.paymentStatus || 'unpaid'}"`,
-            `"${r.utr || ''}"`,
-            `"${r.amount || 0}"`,
-            `"${new Date(r.createdAt).toISOString()}"`,
-          ].join(',')
-        );
-      }
+      // Write to buffer
+      const buf = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
 
-      return new Response(csvRows.join('\n'), {
+      return new Response(buf, {
         headers: {
-          'Content-Type': 'text/csv',
-          'Content-Disposition': `attachment; filename="nextgen-soc-registrations-${Date.now()}.csv"`,
+          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Disposition': `attachment; filename="nextgen-soc-registrations-${Date.now()}.xlsx"`,
         },
       });
     }
