@@ -130,22 +130,31 @@ export function parseTransactionText(
 }
 
 /**
- * Analyze payment screenshot.
- * OCR is now handled client-side via Tesseract.js in the browser.
- * This function only processes text that was already extracted by the browser.
+ * Analyze payment screenshot using server-side Tesseract.js OCR.
  */
 export async function analyzePaymentScreenshot(
   imageUrl: string,
   userUtr: string,
   userAmount: number
 ): Promise<OcrAnalysisResult> {
-  // If raw text is passed directly (from client-side OCR), parse it
-  if (imageUrl && !imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
-    return parseTransactionText(imageUrl, userUtr, userAmount);
+  try {
+    const { createWorker } = await import('tesseract.js');
+    const worker = await createWorker('eng');
+    
+    // Tesseract.js can accept base64 Data URLs or external URLs
+    const ret = await worker.recognize(imageUrl);
+    const rawText = ret.data.text || '';
+    
+    await worker.terminate();
+
+    if (rawText.trim().length > 5) {
+      return parseTransactionText(rawText, userUtr, userAmount);
+    }
+  } catch (error) {
+    console.error('Server-side Tesseract OCR failed:', error);
   }
 
-  // No server-side OCR — browser handles it via Tesseract.js
-  // Return empty result; the submit route will use clientOcrText fallback
+  // Fallback if OCR fails
   return {
     ocrUtr: null,
     ocrAmount: null,

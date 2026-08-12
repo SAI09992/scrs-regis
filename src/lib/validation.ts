@@ -82,7 +82,6 @@ export const paymentSubmissionSchema = z.object({
   ocrAmount: z.number().optional().nullable(),
   ocrDate: z.string().optional().nullable(),
   ocrConfidence: z.number().min(0).max(100).optional().nullable(),
-  clientOcrText: z.string().optional().nullable(),
 });
 
 export type PaymentSubmissionInput = z.infer<typeof paymentSubmissionSchema>;
