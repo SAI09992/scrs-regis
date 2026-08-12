@@ -30,6 +30,7 @@ function RegisterContent() {
   const [submitting, setSubmitting] = useState(false);
   const [successRegId, setSuccessRegId] = useState<string | null>(null);
   const [existingRegId, setExistingRegId] = useState<string | null>(null);
+  const [existingPaymentStatus, setExistingPaymentStatus] = useState<string | null>(null);
   const [checkingRegistration, setCheckingRegistration] = useState(true);
 
   const form = useForm<FullRegistrationInput>({
@@ -72,6 +73,7 @@ function RegisterContent() {
         .then((data) => {
           if (data.success && data.registration) {
             setExistingRegId(data.registration.registrationId);
+            setExistingPaymentStatus(data.payment ? data.payment.status : 'unpaid');
           }
         })
         .catch(console.error)
@@ -208,34 +210,47 @@ function RegisterContent() {
 
   // If existing registration found
   if (existingRegId) {
+    const isUnpaid = !existingPaymentStatus || existingPaymentStatus === 'unpaid' || existingPaymentStatus === 'rejected';
+
     return (
       <div className="flex-1 flex items-center justify-center p-4 min-h-[60vh]">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-md cyber-glass-glow rounded-2xl p-8 border border-cyber-primary/40 text-center space-y-6"
+          className={`w-full max-w-md cyber-glass-glow rounded-2xl p-8 border ${isUnpaid ? 'border-cyan-500/40' : 'border-cyber-primary/40'} text-center space-y-6`}
         >
-          <div className="w-14 h-14 rounded-full bg-emerald-950/40 border border-emerald-500/40 mx-auto flex items-center justify-center text-emerald-400">
+          <div className={`w-14 h-14 rounded-full ${isUnpaid ? 'bg-cyan-950/40 border-cyan-500/40 text-cyan-400' : 'bg-emerald-950/40 border-emerald-500/40 text-emerald-400'} mx-auto flex items-center justify-center border`}>
             <CheckCircle2 className="w-7 h-7" />
           </div>
           <div>
-            <h2 className="text-xl font-bold font-mono text-cyber-text">
-              ALREADY REGISTERED
+            <h2 className={`text-xl font-bold font-mono ${isUnpaid ? 'text-cyan-400' : 'text-cyber-text'}`}>
+              {isUnpaid ? 'PAYMENT PENDING' : 'ALREADY REGISTERED'}
             </h2>
-            <p className="text-xs font-mono text-cyber-text-muted mt-1">
-              You already have an active registration:
+            <p className="text-xs font-mono text-cyber-text-muted mt-2 leading-relaxed">
+              {isUnpaid ? 'Your application has been submitted successfully, but your payment is still pending. Please complete your payment to secure your spot.' : 'You already have an active registration:'}
             </p>
-            <div className="mt-3 p-3 rounded-lg bg-cyber-bg border border-cyber-border font-mono text-sm font-bold text-cyber-primary">
-              {existingRegId}
-            </div>
+            {!isUnpaid && (
+              <div className="mt-3 p-3 rounded-lg bg-cyber-bg border border-cyber-border font-mono text-sm font-bold text-cyber-primary">
+                {existingRegId}
+              </div>
+            )}
           </div>
 
           <div className="pt-2">
-            <Link href="/portal" className="block">
-              <CyberButton variant="primary" glow size="lg" className="w-full">
-                GO TO PARTICIPANT PORTAL
-              </CyberButton>
-            </Link>
+            {isUnpaid ? (
+              <Link href={`/register/payment?regId=${existingRegId}`} className="block">
+                <CyberButton variant="primary" glow size="lg" className="w-full gap-2">
+                  <span>PROCEED TO PAYMENT</span>
+                  <ArrowRight className="w-4 h-4" />
+                </CyberButton>
+              </Link>
+            ) : (
+              <Link href="/portal" className="block">
+                <CyberButton variant="primary" glow size="lg" className="w-full">
+                  GO TO PARTICIPANT PORTAL
+                </CyberButton>
+              </Link>
+            )}
           </div>
         </motion.div>
       </div>
