@@ -11,6 +11,7 @@ import Link from 'next/link';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   if (status === 'loading') {
     return (
@@ -47,7 +48,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const isAdmin = (session.user as any)?.role === 'admin';
-  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   if (!isAdmin) {
     return (
