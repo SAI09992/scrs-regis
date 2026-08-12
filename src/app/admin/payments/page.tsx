@@ -294,7 +294,7 @@ export default function AdminPaymentsPage() {
                       TRANSACTION INTELLIGENCE DOSSIER
                     </h2>
                     <p className="text-[11px] text-cyber-text-muted">
-                      PAYMENT REF: {selectedPayment.id} // REG ID: {selectedPayment.participant.registrationId}
+                      PAYMENT REF: {selectedPayment.id} // REG ID: {selectedPayment.participant.registrationId} // UTR: <span className="text-cyber-primary font-mono font-bold">{selectedPayment.utr}</span>
                     </p>
                   </div>
                 </div>
@@ -318,8 +318,16 @@ export default function AdminPaymentsPage() {
                     <div className="grid grid-cols-2 gap-2 text-cyber-text-muted text-[11px]">
                       <div>Name: <span className="text-cyber-text font-bold">{selectedPayment.participant.name}</span></div>
                       <div>Roll No: <span className="text-cyber-text">{selectedPayment.participant.registerNumber}</span></div>
-                      <div>Email: <span className="text-cyber-text">{selectedPayment.participant.email}</span></div>
+                      <div>Email: <span className="text-cyber-text truncate block">{selectedPayment.participant.email}</span></div>
                       <div>Track: <span className="text-emerald-400 font-bold">{selectedPayment.participant.creditType}</span></div>
+                    </div>
+
+                    {/* Prominent User-Submitted UTR */}
+                    <div className="p-2.5 rounded-lg bg-cyan-950/60 border border-cyber-primary/60 flex items-center justify-between text-xs font-mono">
+                      <span className="text-cyber-text-dim font-bold">SUBMITTED UTR:</span>
+                      <span className="text-cyber-primary font-extrabold text-sm tracking-wider select-all">
+                        {selectedPayment.utr || 'NOT PROVIDED'}
+                      </span>
                     </div>
                   </div>
 
