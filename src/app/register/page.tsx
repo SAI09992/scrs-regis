@@ -100,6 +100,12 @@ function RegisterContent() {
 
   // Submit full registration to backend
   const onSubmit = async (data: FullRegistrationInput) => {
+    // Prevent accidental submission via "Enter" key on earlier steps
+    if (formStep < TOTAL_STEPS) {
+      handleNextStep();
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await fetch('/api/register', {
@@ -111,8 +117,8 @@ function RegisterContent() {
       const result = await res.json();
 
       if (res.ok && result.success) {
-        toast.success(`✓ Registration confirmed: ${result.registrationId}`);
-        setSuccessRegId(result.registrationId);
+        toast.success(`✓ Registration confirmed! Redirecting to payment...`);
+        router.push(`/register/payment?regId=${result.registrationId}`);
       } else if (res.status === 409 && result.registrationId) {
         setExistingRegId(result.registrationId);
         toast.info(result.error);
