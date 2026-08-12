@@ -34,15 +34,10 @@ export function parseTransactionText(
 
   // 1. Extract UTR / Ref No / Txn ID across all Indian UPI App formats
   const utrPatterns = [
-    // PhonePe UTR format: "UTR: 767445299041" or "UTR 767445299041"
     /(?:UTR|UTR\s*No|UTR\s*ID|UPI\s*Ref|Ref\s*No|Ref\s*ID|Transaction\s*ID|Txn\s*ID|Google\s*Pay\s*ID)[:\s#]*([A-Za-z0-9]{10,24})/i,
-    // PhonePe Transaction ID starting with T: e.g. T23081032220395606346477
     /\b(T\d{20,24})\b/i,
-    // Standard 12-digit Indian UPI Reference ID (e.g., 423456789012 or 767445299041)
     /\b(\d{12})\b/,
-    // Spaced 12-digit (e.g. 4234 5678 9012)
     /\b([0-9]{4}\s+[0-9]{4}\s+[0-9]{4})\b/,
-    // Alphanumeric 10-22 char codes
     /\b([A-Z0-9]{12,22})\b/,
   ];
 
@@ -54,7 +49,6 @@ export function parseTransactionText(
     }
   }
 
-  // Check if expected UTR or clean digits are present in raw OCR text
   const cleanUserUtr = cleanDigits(expectedUtr);
   const cleanRawText = cleanDigits(rawText);
   const cleanExtractedUtr = cleanDigits(extractedUtr);
@@ -66,12 +60,11 @@ export function parseTransactionText(
       (cleanExtractedUtr && cleanUserUtr.includes(cleanExtractedUtr)))
   );
 
-  // If user UTR is directly matched in raw OCR text, assign it if pattern extraction missed exact digits
   if (utrMatched && (!extractedUtr || !extractedUtr.includes(expectedUtr!))) {
     extractedUtr = expectedUtr || extractedUtr;
   }
 
-  // 2. Extract Fee Amount (e.g. ₹300, ₹ 300.00, Rs. 300, 300)
+  // 2. Extract Fee Amount
   const amountPatterns = [
     /(?:₹|INR|Rs\.?|Amount)\s*[:]?\s*([0-9,]+(?:\.[0-9]{2})?)/i,
     /(?:Paid\s*to|Debited|Total|Amount\s*Paid)\s*(?:₹|INR|Rs\.?)?\s*([0-9,]+(?:\.[0-9]{2})?)/i,
@@ -115,7 +108,6 @@ export function parseTransactionText(
     }
   }
 
-  // Calculate real confidence score
   let score = 0;
   if (extractedUtr) score += 35;
   if (utrMatched) score += 40;
@@ -138,75 +130,28 @@ export function parseTransactionText(
 }
 
 /**
- * Process payment screenshot with Google Cloud Vision API
- * Always sends raw Base64 bytes directly so HTTP/Cloud URLs never fail
+ * Analyze payment screenshot.
+ * OCR is now handled client-side via Tesseract.js in the browser.
+ * This function only processes text that was already extracted by the browser.
  */
 export async function analyzePaymentScreenshot(
   imageUrl: string,
   userUtr: string,
   userAmount: number
 ): Promise<OcrAnalysisResult> {
-  // If raw text string is directly passed
+  // If raw text is passed directly (from client-side OCR), parse it
   if (imageUrl && !imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
     return parseTransactionText(imageUrl, userUtr, userAmount);
   }
 
-  const visionApiKey = process.env.GOOGLE_VISION_API_KEY;
-
-  if (visionApiKey && imageUrl) {
-    try {
-      let base64Content: string | null = null;
-
-      if (imageUrl.startsWith('data:')) {
-        base64Content = imageUrl.split(',')[1] || imageUrl;
-      } else if (imageUrl.startsWith('http')) {
-        // Fetch remote image bytes into buffer
-        const imgRes = await fetch(imageUrl);
-        const arrayBuf = await imgRes.arrayBuffer();
-        base64Content = Buffer.from(arrayBuf).toString('base64');
-      }
-
-      if (base64Content) {
-        const response = await fetch(
-          `https://vision.googleapis.com/v1/images:annotate?key=${visionApiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              requests: [
-                {
-                  image: { content: base64Content },
-                  features: [{ type: 'TEXT_DETECTION' }],
-                },
-              ],
-            }),
-          }
-        );
-
-        const data = await response.json();
-        if (data?.error) {
-          console.error('Google Cloud Vision API Error:', data.error);
-        }
-
-        const detectedText = data?.responses?.[0]?.fullTextAnnotation?.text || '';
-        if (detectedText) {
-          return parseTransactionText(detectedText, userUtr, userAmount);
-        }
-      }
-    } catch (err) {
-      console.error('Google Cloud Vision fetch exception:', err);
-    }
-  } else {
-    console.warn('GOOGLE_VISION_API_KEY is not set or imageUrl is empty.');
-  }
-
-  // Fallback: No Vision API key or API call returned empty text.
+  // No server-side OCR — browser handles it via Tesseract.js
+  // Return empty result; the submit route will use clientOcrText fallback
   return {
     ocrUtr: null,
     ocrAmount: null,
     ocrDate: null,
     ocrConfidence: 0,
-    rawText: '[OCR pending manual admin verification]',
+    rawText: '',
     matchedFields: {
       utrMatched: false,
       amountMatched: false,
