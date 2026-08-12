@@ -66,22 +66,59 @@ function PaymentContent() {
     setTimeout(() => setCopiedUpi(false), 2500);
   };
 
-  // Image File Selection
+  // Image File Selection with Client-Side Compression
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
 
-    if (selected.size > 5 * 1024 * 1024) {
-      toast.error('Screenshot file exceeds maximum 5MB limit');
+    if (selected.size > 8 * 1024 * 1024) {
+      toast.error('Screenshot file exceeds maximum 8MB limit');
       return;
     }
 
     const reader = new FileReader();
     reader.onload = (event) => {
-      setPreviewUrl(event.target?.result as string);
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > MAX_WIDTH) {
+          height = Math.round((height * MAX_WIDTH) / width);
+          width = MAX_WIDTH;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+
+        // Compress to JPEG (0.4 quality) to drastically reduce Base64 size
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              const compressedFile = new File([blob], selected.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                type: 'image/jpeg',
+                lastModified: Date.now(),
+              });
+              setFile(compressedFile);
+              
+              // Set preview URL
+              const reader2 = new FileReader();
+              reader2.onloadend = () => setPreviewUrl(reader2.result as string);
+              reader2.readAsDataURL(blob);
+            }
+          },
+          'image/jpeg',
+          0.4
+        );
+      };
+      img.src = event.target?.result as string;
     };
     reader.readAsDataURL(selected);
-    setFile(selected);
   };
 
   const handlePaymentSubmit = async (e: React.FormEvent) => {
