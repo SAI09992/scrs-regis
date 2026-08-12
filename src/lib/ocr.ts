@@ -139,6 +139,7 @@ export function parseTransactionText(
 
 /**
  * Process payment screenshot with Google Cloud Vision API
+ * Always sends raw Base64 bytes directly so HTTP/Cloud URLs never fail
  */
 export async function analyzePaymentScreenshot(
   imageUrl: string,
@@ -154,16 +155,18 @@ export async function analyzePaymentScreenshot(
 
   if (visionApiKey && imageUrl) {
     try {
-      let imagePayload: any = null;
+      let base64Content: string | null = null;
 
       if (imageUrl.startsWith('data:')) {
-        const base64Data = imageUrl.split(',')[1] || imageUrl;
-        imagePayload = { content: base64Data };
+        base64Content = imageUrl.split(',')[1] || imageUrl;
       } else if (imageUrl.startsWith('http')) {
-        imagePayload = { source: { imageUri: imageUrl } };
+        // Fetch remote image bytes into buffer
+        const imgRes = await fetch(imageUrl);
+        const arrayBuf = await imgRes.arrayBuffer();
+        base64Content = Buffer.from(arrayBuf).toString('base64');
       }
 
-      if (imagePayload) {
+      if (base64Content) {
         const response = await fetch(
           `https://vision.googleapis.com/v1/images:annotate?key=${visionApiKey}`,
           {
@@ -172,7 +175,7 @@ export async function analyzePaymentScreenshot(
             body: JSON.stringify({
               requests: [
                 {
-                  image: imagePayload,
+                  image: { content: base64Content },
                   features: [{ type: 'TEXT_DETECTION' }],
                 },
               ],
@@ -194,11 +197,10 @@ export async function analyzePaymentScreenshot(
       console.error('Google Cloud Vision fetch exception:', err);
     }
   } else {
-    console.warn('GOOGLE_VISION_API_KEY is not set or imageUrl is empty. Screenshot queued for manual admin verification.');
+    console.warn('GOOGLE_VISION_API_KEY is not set or imageUrl is empty.');
   }
 
   // Fallback: No Vision API key or API call returned empty text.
-  // Return clear non-matching result so Admin performs manual verification without fake matches!
   return {
     ocrUtr: null,
     ocrAmount: null,
