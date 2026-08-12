@@ -147,7 +147,7 @@ export default function Step2Academic({ form }: Props) {
           <label className="text-xs text-cyber-text">Section *</label>
           <input
             type="text"
-            placeholder="Enter your section"
+            placeholder="Enter section like 23S10, 24S15"
             {...register('section')}
             className="w-full px-3.5 py-2.5 rounded-lg bg-cyber-surface border border-cyber-border text-cyber-text text-sm uppercase focus:outline-none focus:border-cyber-primary transition-colors"
           />
