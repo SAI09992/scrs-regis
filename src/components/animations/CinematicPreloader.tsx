@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RadarSphere3D from './RadarSphere3D';
-import { Shield } from 'lucide-react';
+import { BrandLogo } from '@/components/ui/BrandLogo';
 
 interface PreloaderProps {
   onComplete: () => void;
@@ -14,6 +14,18 @@ export default function CinematicPreloader({ onComplete }: PreloaderProps) {
   const [phase, setPhase] = useState<1 | 2 | 3>(1);
   const [logText, setLogText] = useState('> INITIALIZING SCRS DEFENSE FRAMEWORK...');
   const [glitchText, setGlitchText] = useState('NEXT GEN SOC BOOTCAMP');
+
+  // Suppress THREE.Clock deprecation warning from R3F internals
+  useEffect(() => {
+    const originalWarn = console.warn;
+    console.warn = (...args) => {
+      if (args[0] && typeof args[0] === 'string' && args[0].includes('THREE.Clock: This module has been deprecated')) return;
+      originalWarn(...args);
+    };
+    return () => {
+      console.warn = originalWarn;
+    };
+  }, []);
 
   // Phase 1: Progress Counter
   useEffect(() => {
@@ -157,7 +169,7 @@ export default function CinematicPreloader({ onComplete }: PreloaderProps) {
               className="mb-8 flex flex-col items-center"
             >
               <div className="w-24 h-24 bg-cyber-bg/90 border border-cyber-primary backdrop-blur-md rounded-2xl flex items-center justify-center shadow-[0_0_40px_rgba(16,185,129,0.4)]">
-                <Shield className="w-12 h-12 text-emerald-400" />
+                <BrandLogo variant="icon-only" withLink={false} />
               </div>
             </motion.div>
 

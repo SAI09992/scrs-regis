@@ -85,10 +85,10 @@ function ParticleSphere({ implode }: { implode: boolean }) {
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.025}
+        size={0.008}
         color="#10b981"
         transparent
-        opacity={0.8}
+        opacity={0.6}
         sizeAttenuation
         depthWrite={false}
         blending={THREE.AdditiveBlending}
