@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
       await db.insert(payments).values({
         id: paymentId,
         registrationId: registration.id,
-        userId: user.id,
+        userId: registration.userId,
         utr: validatedData.utr.trim().toUpperCase(),
         amount: validatedData.amount,
         expectedAmount,
