@@ -84,7 +84,7 @@ export default function EventSpecsSection() {
         <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-950/60 border border-cyber-primary/40 text-cyber-primary text-xs font-mono">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>// 02. OPERATIONAL SPECIFICATIONS</span>
+            <span>// 03. OPERATIONAL SPECIFICATIONS</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold font-mono text-cyber-text">
             EVENT SPECIFICATIONS

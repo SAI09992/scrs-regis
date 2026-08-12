@@ -57,7 +57,7 @@ export default function SchedulePreview() {
         <div className="text-center max-w-3xl mx-auto mb-12 space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-950/60 border border-cyber-primary/40 text-cyber-primary text-xs font-mono">
             <Calendar className="w-3.5 h-3.5" />
-            <span>// 06. 2-DAY CURRICULUM TIMELINE</span>
+            <span>// 07. 2-DAY CURRICULUM TIMELINE</span>
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold font-mono text-cyber-text">
             2-DAY BOOTCAMP SCHEDULE

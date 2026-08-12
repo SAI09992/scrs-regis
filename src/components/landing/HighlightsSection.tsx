@@ -34,7 +34,7 @@ export default function HighlightsSection() {
         <div className="text-center max-w-3xl mx-auto mb-10 space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-950/60 border border-cyber-primary/40 text-cyber-primary text-xs font-mono">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>// 05. CORE ADVANTAGES & HIGHLIGHTS</span>
+            <span>// 06. CORE ADVANTAGES & HIGHLIGHTS</span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold font-mono text-cyber-text">
             WORKSHOP HIGHLIGHTS

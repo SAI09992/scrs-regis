@@ -83,7 +83,7 @@ export default function LiveSlotTracker() {
               </div>
               <div>
                 <div className="text-[10px] font-mono font-bold text-cyber-primary uppercase tracking-widest">
-                  // 07. LIVE CAPACITY TELEMETRY
+                  // 01. LIVE CAPACITY & SEAT TRACKER
                 </div>
                 <div className="flex items-center gap-2 mt-0.5">
                   <h3 className="text-lg sm:text-xl font-bold font-mono tracking-wide text-cyber-text">
