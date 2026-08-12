@@ -48,8 +48,8 @@ export default function HighlightsSection() {
             return (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, scale: 0.8, y: 30, filter: 'blur(8px)' }}
-                whileInView={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ delay: idx * 0.04, duration: 0.3 }}
                 className="p-4 rounded-xl cyber-glass border border-cyber-border hover:border-cyber-primary/50 transition-all font-mono space-y-2"

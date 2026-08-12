@@ -15,10 +15,10 @@ export default function RegistrationCtaSection() {
     <section id="register" className="py-16 sm:py-24 relative overflow-hidden bg-cyber-bg-elevated/40 border-t border-cyber-border/60">
       <div className="container mx-auto px-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: 100, rotateX: 20, filter: 'blur(15px)' }}
-          whileInView={{ opacity: 1, scale: 1, y: 0, rotateX: 0, filter: 'blur(0px)' }}
+          initial={{ opacity: 0, scale: 0.95, y: 50 }}
+          whileInView={{ opacity: 1, scale: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, type: 'spring', bounce: 0.4 }}
+          transition={{ duration: 0.8, type: 'spring', bounce: 0.3 }}
           className="relative rounded-3xl p-8 sm:p-14 cyber-glass-glow border-2 border-cyber-primary/50 text-center max-w-4xl mx-auto space-y-6 overflow-hidden shadow-cyber-card font-mono"
         >
           {/* Ambient Glow */}
