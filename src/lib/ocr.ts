@@ -20,6 +20,18 @@ function cleanDigits(str: string | null | undefined): string {
 }
 
 /**
+ * Normalizes common OCR character misreads (O->0, S->5, l/I->1, B->8)
+ */
+function normalizeOcrNumber(str: string): string {
+  return str
+    .replace(/[OOo]/g, '0')
+    .replace(/[Ss]/g, '5')
+    .replace(/[lI]/g, '1')
+    .replace(/[B]/g, '8')
+    .replace(/[Zz]/g, '2');
+}
+
+/**
  * Intelligent regex parser to extract UPI/Bank transaction details from text
  * Supports PhonePe, GPay, Paytm, CRED, YONO, BHIM & All Indian UPI Apps
  */
@@ -34,10 +46,15 @@ export function parseTransactionText(
 
   // 1. Extract UTR / Ref No / Txn ID across all Indian UPI App formats
   const utrPatterns = [
-    /(?:UTR|UTR\s*No|UTR\s*ID|UPI\s*Ref|Ref\s*No|Ref\s*ID|Transaction\s*ID|Txn\s*ID|Google\s*Pay\s*ID)[:\s#]*([A-Za-z0-9]{10,24})/i,
-    /\b(T\d{20,24})\b/i,
+    // Highest priority: Explicit UPI/UTR keywords
+    /(?:UTR|UTR\s*No|UTR\s*ID|UPI\s*Ref|Ref\s*No|Ref\s*ID)[:\s#]*([A-Za-z0-9]{10,24})/i,
+    // Next priority: Standard 12-digit UPI reference numbers (usually starts with year like 2,3,4)
+    /\b([234]\d{11})\b/,
     /\b(\d{12})\b/,
     /\b([0-9]{4}\s+[0-9]{4}\s+[0-9]{4})\b/,
+    // Lower priority: App-specific Transaction IDs
+    /(?:Transaction\s*ID|Txn\s*ID|Google\s*Pay\s*ID)[:\s#]*([A-Za-z0-9]{10,24})/i,
+    /\b(T\d{20,24})\b/i,
     /\b([A-Z0-9]{12,22})\b/,
   ];
 
@@ -53,14 +70,19 @@ export function parseTransactionText(
   const cleanRawText = cleanDigits(rawText);
   const cleanExtractedUtr = cleanDigits(extractedUtr);
 
+  // Fuzzy match to handle OCR misreading 0 as O, 5 as S, etc.
+  const normRawText = normalizeOcrNumber(cleanRawText);
+  const normUserUtr = normalizeOcrNumber(cleanUserUtr);
+  const normExtractedUtr = normalizeOcrNumber(cleanExtractedUtr);
+
   const utrMatched = !!(
     cleanUserUtr.length >= 6 &&
-    (cleanRawText.includes(cleanUserUtr) ||
-      (cleanExtractedUtr && cleanExtractedUtr.includes(cleanUserUtr)) ||
-      (cleanExtractedUtr && cleanUserUtr.includes(cleanExtractedUtr)))
+    (normRawText.includes(normUserUtr) ||
+      (normExtractedUtr && normExtractedUtr.includes(normUserUtr)) ||
+      (normExtractedUtr && normUserUtr.includes(normExtractedUtr)))
   );
 
-  if (utrMatched && (!extractedUtr || !extractedUtr.includes(expectedUtr!))) {
+  if (utrMatched && (!extractedUtr || !normalizeOcrNumber(extractedUtr).includes(normUserUtr))) {
     extractedUtr = expectedUtr || extractedUtr;
   }
 
