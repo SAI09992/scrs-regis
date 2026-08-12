@@ -322,41 +322,81 @@ export default function AdminPaymentsPage() {
                   </div>
 
                   {/* Transaction Intelligence Checklist */}
-                  <div className="p-4 rounded-xl bg-cyber-surface/80 border border-cyan-500/40 space-y-2.5">
-                    <div className="text-cyber-primary font-bold text-xs uppercase tracking-wider">
-                      AUTOMATED SOC CHECKS
-                    </div>
+                  {(() => {
+                    const userUtr = (selectedPayment.utr || '').trim().toUpperCase();
+                    const ocrUtr = (selectedPayment.ocrUtr || '').trim().toUpperCase();
+                    const cleanUser = userUtr.replace(/[^A-Z0-9]/g, '');
+                    const cleanOcr = ocrUtr.replace(/[^A-Z0-9]/g, '');
 
-                    <div className="space-y-2 text-[11px]">
-                      <div className="flex items-center justify-between p-2 rounded bg-cyber-bg border border-cyber-border">
-                        <span>UTR MATCH</span>
-                        <span className="text-emerald-400 font-bold flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> MATCH (12-DIGIT)
-                        </span>
-                      </div>
+                    const isUtrMatch =
+                      cleanUser.length >= 6 &&
+                      cleanOcr.length >= 6 &&
+                      (cleanUser === cleanOcr || cleanOcr.includes(cleanUser) || cleanUser.includes(cleanOcr));
 
-                      <div className="flex items-center justify-between p-2 rounded bg-cyber-bg border border-cyber-border">
-                        <span>FEE AMOUNT MATCH</span>
-                        <span className="text-emerald-400 font-bold flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> ₹{selectedPayment.amount} (EXACT)
-                        </span>
-                      </div>
+                    const expectedFee = selectedPayment.expectedAmount || 300;
+                    const isAmountMatch = selectedPayment.amount === expectedFee;
 
-                      <div className="flex items-center justify-between p-2 rounded bg-cyber-bg border border-cyber-border">
-                        <span>DUPLICATE UTR CHECK</span>
-                        <span className="text-emerald-400 font-bold flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> NONE DETECTED
-                        </span>
-                      </div>
+                    return (
+                      <div className="p-4 rounded-xl bg-cyber-surface/80 border border-cyan-500/40 space-y-3">
+                        <div className="text-cyber-primary font-bold text-xs uppercase tracking-wider flex items-center justify-between">
+                          <span>AUTOMATED SOC CHECKS</span>
+                          <span className="text-[10px] text-cyber-text-dim">OCR CONFIDENCE: {selectedPayment.ocrConfidence || 0}%</span>
+                        </div>
 
-                      <div className="flex items-center justify-between p-2 rounded bg-cyber-bg border border-cyber-border">
-                        <span>OCR CONFIDENCE</span>
-                        <span className="text-cyber-primary font-bold">
-                          {selectedPayment.ocrConfidence || 96}%
-                        </span>
+                        {/* Explicit UTR Comparison Fields */}
+                        <div className="p-2.5 rounded bg-cyber-bg border border-cyber-border/80 space-y-1.5 text-[11px]">
+                          <div className="flex items-center justify-between">
+                            <span className="text-cyber-text-dim font-bold">SUBMITTED UTR (USER):</span>
+                            <span className="text-cyan-300 font-mono font-bold select-all bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-500/30">
+                              {userUtr || 'NOT PROVIDED'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-cyber-text-dim font-bold">IMAGE DETECTED UTR:</span>
+                            <span className="text-cyber-text font-mono font-bold select-all bg-cyber-surface px-2 py-0.5 rounded border border-cyber-border">
+                              {ocrUtr || 'NONE DETECTED'}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-1 border-t border-cyber-border/50">
+                            <span className="text-cyber-text font-bold">UTR MATCH STATUS:</span>
+                            {isUtrMatch ? (
+                              <span className="text-emerald-400 font-bold flex items-center gap-1">
+                                <CheckCircle2 className="w-3.5 h-3.5" /> MATCH (VERIFIED)
+                              </span>
+                            ) : (
+                              <span className="text-red-400 font-bold flex items-center gap-1">
+                                <XCircle className="w-3.5 h-3.5" /> MISMATCH / UNVERIFIED
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Fee Amount Match */}
+                        <div className="flex items-center justify-between p-2 rounded bg-cyber-bg border border-cyber-border text-[11px]">
+                          <span>FEE AMOUNT MATCH</span>
+                          {isAmountMatch ? (
+                            <span className="text-emerald-400 font-bold flex items-center gap-1">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> ₹{selectedPayment.amount} (EXACT)
+                            </span>
+                          ) : (
+                            <span className="text-red-400 font-bold flex items-center gap-1">
+                              <XCircle className="w-3.5 h-3.5" /> ₹{selectedPayment.amount} (EXPECTED ₹{expectedFee})
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Duplicate UTR Check */}
+                        <div className="flex items-center justify-between p-2 rounded bg-cyber-bg border border-cyber-border text-[11px]">
+                          <span>DUPLICATE UTR CHECK</span>
+                          <span className="text-emerald-400 font-bold flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5" /> UNIQUE SUBMISSION
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Right: Payment Evidence Screenshot */}

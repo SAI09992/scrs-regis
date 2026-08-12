@@ -12,6 +12,14 @@ export interface OcrAnalysisResult {
 }
 
 /**
+ * Clean string down to raw alphanumeric digits for strict matching
+ */
+function cleanDigits(str: string | null | undefined): string {
+  if (!str) return '';
+  return str.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+}
+
+/**
  * Intelligent regex parser to extract UPI/Bank transaction details from text
  */
 export function parseTransactionText(
@@ -39,9 +47,21 @@ export function parseTransactionText(
     }
   }
 
-  // If user entered expected UTR and it is found in text, confirm it
-  if (expectedUtr && rawText.includes(expectedUtr)) {
-    extractedUtr = expectedUtr;
+  // Check if expected UTR is present in raw OCR text
+  const cleanUserUtr = cleanDigits(expectedUtr);
+  const cleanRawText = cleanDigits(rawText);
+  const cleanExtractedUtr = cleanDigits(extractedUtr);
+
+  const utrMatched = !!(
+    cleanUserUtr.length >= 6 &&
+    (cleanRawText.includes(cleanUserUtr) ||
+      (cleanExtractedUtr && cleanExtractedUtr.includes(cleanUserUtr)) ||
+      (cleanExtractedUtr && cleanUserUtr.includes(cleanExtractedUtr)))
+  );
+
+  // If user UTR is directly matched in OCR text, set extractedUtr to expectedUtr if OCR missed part of it
+  if (utrMatched && !extractedUtr) {
+    extractedUtr = expectedUtr || null;
   }
 
   // 2. Extract Amount (e.g. ₹300, ₹ 450.00, Rs. 300, INR 300)
@@ -62,12 +82,19 @@ export function parseTransactionText(
     }
   }
 
-  // If expected amount is present in the raw text
-  if (expectedAmount && (rawText.includes(expectedAmount.toString()) || rawText.includes(`₹${expectedAmount}`))) {
-    extractedAmount = expectedAmount;
+  // Check if expected amount is present in raw text
+  const amountMatched = !!(
+    expectedAmount &&
+    (rawText.includes(expectedAmount.toString()) ||
+      rawText.includes(`₹${expectedAmount}`) ||
+      (extractedAmount && Math.abs(extractedAmount - expectedAmount) < 1))
+  );
+
+  if (amountMatched && !extractedAmount) {
+    extractedAmount = expectedAmount || null;
   }
 
-  // 3. Extract Date / Time (e.g. 22 Aug 2026, 22/08/2026, 10:45 AM)
+  // 3. Extract Date / Time
   const datePatterns = [
     /\b(\d{1,2}\s+(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{2,4}(?:,\s*\d{1,2}:\d{2}(?:\s*[AP]M)?)?)/i,
     /\b(\d{1,2}[/-]\d{1,2}[/-]\d{2,4}(?:\s+\d{1,2}:\d{2}(?::\d{2})?)?)/,
@@ -82,43 +109,37 @@ export function parseTransactionText(
     }
   }
 
-  // Calculate confidence score
+  // Calculate confidence score strictly based on REAL OCR matches
   let score = 0;
-  const utrMatched = !!(extractedUtr && expectedUtr && extractedUtr.toLowerCase() === expectedUtr.toLowerCase());
-  const amountMatched = !!(extractedAmount && expectedAmount && Math.abs(extractedAmount - expectedAmount) < 1);
-  const dateMatched = !!extractedDate;
-
-  if (extractedUtr) score += 40;
-  if (utrMatched) score += 25;
-  if (extractedAmount) score += 20;
+  if (extractedUtr) score += 30;
+  if (utrMatched) score += 40;
+  if (extractedAmount) score += 15;
   if (amountMatched) score += 10;
   if (extractedDate) score += 5;
-
-  const finalConfidence = Math.min(100, Math.max(score, extractedUtr ? 65 : 35));
 
   return {
     ocrUtr: extractedUtr,
     ocrAmount: extractedAmount,
-    ocrDate: extractedDate || new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-    ocrConfidence: finalConfidence,
+    ocrDate: extractedDate || null,
+    ocrConfidence: score,
     rawText,
     matchedFields: {
       utrMatched,
       amountMatched,
-      dateMatched,
+      dateMatched: !!extractedDate,
     },
   };
 }
 
 /**
- * Process payment screenshot with Google Cloud Vision or simulated intelligence fallback
+ * Process payment screenshot with Google Cloud Vision or clear manual fallback
  */
 export async function analyzePaymentScreenshot(
   imageUrl: string,
   userUtr: string,
   userAmount: number
 ): Promise<OcrAnalysisResult> {
-  // If raw OCR text string is directly passed (e.g. unit test or pre-extracted OCR)
+  // If raw OCR text string is directly passed
   if (imageUrl && !imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
     return parseTransactionText(imageUrl, userUtr, userAmount);
   }
@@ -130,11 +151,9 @@ export async function analyzePaymentScreenshot(
       let imagePayload: any = null;
 
       if (imageUrl.startsWith('data:')) {
-        // Base64 data URL
         const base64Data = imageUrl.split(',')[1] || imageUrl;
         imagePayload = { content: base64Data };
       } else if (imageUrl.startsWith('http')) {
-        // Remote Cloud URL
         imagePayload = { source: { imageUri: imageUrl } };
       }
 
@@ -166,15 +185,14 @@ export async function analyzePaymentScreenshot(
     }
   }
 
-  // Fallback: No Vision API key available or Vision call failed.
-  // Return a manual-review result with the user-submitted UTR and amount.
-  // Admin will verify the screenshot manually in the payment queue.
+  // Fallback: No Vision API key available or image OCR pending manual admin check.
+  // Return clear non-matching result so Admin performs manual verification without fake matches!
   return {
-    ocrUtr: userUtr || null,
-    ocrAmount: userAmount || null,
-    ocrDate: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
-    ocrConfidence: 30, // Low confidence — needs manual admin verification
-    rawText: '[OCR not available — manual verification required]',
+    ocrUtr: null,
+    ocrAmount: null,
+    ocrDate: null,
+    ocrConfidence: 0,
+    rawText: '[OCR pending manual admin verification]',
     matchedFields: {
       utrMatched: false,
       amountMatched: false,
