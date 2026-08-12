@@ -94,7 +94,7 @@ export default function Step2Academic({ form }: Props) {
             className="w-full px-3.5 py-2.5 rounded-lg bg-cyber-surface border border-cyber-border text-cyber-text text-sm focus:outline-none focus:border-cyber-primary transition-colors font-mono"
           >
             <option value="">Select Department</option>
-            <option value="CSE">CSE - PE (Professional Elective)</option>
+            <option value="CSE">CSE - PE (Program Elective)</option>
             <option value="Other">Others - UE (University Elective)</option>
           </select>
           {errors.department && !deptChoice && (
