@@ -4,7 +4,7 @@ import React from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import AdminSidebar from '@/components/admin/AdminSidebar';
-import { ShieldAlert, Terminal, Lock } from 'lucide-react';
+import { ShieldAlert, Terminal, Lock, Shield } from 'lucide-react';
 import { CyberButton } from '@/components/ui/CyberButton';
 import Link from 'next/link';
 
