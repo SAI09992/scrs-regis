@@ -95,6 +95,16 @@
   box-shadow: 0 0 30px -10px rgba(0, 229, 255, 0.2);
 }
 
+/* Mobile Performance Optimization — Disable GPU-heavy blur on touch scroll */
+@media (max-width: 768px) {
+  .cyber-glass,
+  .cyber-glass-glow {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(10, 16, 25, 0.96) !important;
+  }
+}
+
 /* Scanline Effect */
 .scanline-overlay {
   background: linear-gradient(

@@ -47,7 +47,7 @@ export function BrandLogo({
               NEXTGEN <span className="text-cyber-primary">SOC</span>
             </span>
           </div>
-          <span className={cn('font-mono font-semibold tracking-widest text-cyber-text-dim group-hover:text-cyber-secondary transition-colors uppercase', current.subtext)}>
+          <span className={cn('hidden sm:block font-mono font-semibold tracking-widest text-cyber-text-dim group-hover:text-cyber-secondary transition-colors uppercase', current.subtext)}>
             SCRS // SOFT COMPUTING RESEARCH SOCIETY
           </span>
         </div>
