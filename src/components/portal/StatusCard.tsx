@@ -4,10 +4,9 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { StatusBadge } from '@/components/ui/StatusBadge';
-import { CyberButton } from '@/components/ui/CyberButton';
 import { maskUtr, formatDate } from '@/lib/utils';
 import { PaymentData } from '@/types';
-import { ShieldCheck, Clock, AlertTriangle, ArrowRight, RefreshCw, FileText } from 'lucide-react';
+import { ShieldCheck, Clock, AlertTriangle, ArrowRight, Lock } from 'lucide-react';
 
 interface Props {
   payment?: PaymentData | null;
@@ -36,10 +35,10 @@ export default function StatusCard({ payment, registrationId }: Props) {
 
         <div className="pt-2">
           <Link href={`/register/payment?regId=${registrationId}`}>
-            <CyberButton variant="primary" glow size="md" className="gap-2">
+            <button className="px-4 py-2.5 rounded-xl bg-cyber-primary text-cyber-bg font-bold hover:bg-cyber-primary/90 transition-colors flex items-center gap-2 shadow-cyber-glow-sm">
               <span>SUBMIT PAYMENT NOW</span>
               <ArrowRight className="w-4 h-4" />
-            </CyberButton>
+            </button>
           </Link>
         </div>
       </motion.div>
@@ -129,23 +128,25 @@ export default function StatusCard({ payment, registrationId }: Props) {
         </div>
       )}
 
-      {/* Rejected State Info */}
+      {/* Rejected State Info — No Resubmit Option */}
       {isRejected && (
-        <div className="space-y-4">
-          <div className="p-3 rounded-xl bg-red-950/30 border border-red-500/40 text-red-400 text-xs space-y-1">
-            <div className="font-bold">PAYMENT NOT VERIFIED</div>
-            <p className="text-[11px] text-cyber-text-muted">
-              Reason: {payment.rejectionReason || 'UTR or payment screenshot could not be matched with banking records.'}
+        <div className="space-y-3">
+          <div className="p-4 rounded-xl bg-red-950/40 border border-red-500/60 text-red-400 text-xs space-y-2">
+            <div className="font-bold text-sm flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+              <span>PAYMENT VERIFICATION REJECTED BY ADMIN</span>
+            </div>
+            <p className="text-xs text-cyber-text-muted leading-relaxed">
+              Reason: <span className="text-red-300 font-bold">{payment.rejectionReason || 'UTR or payment screenshot could not be matched with banking records.'}</span>
             </p>
           </div>
 
-          <div>
-            <Link href={`/register/payment?regId=${registrationId}`}>
-              <CyberButton variant="danger" size="md" className="gap-2">
-                <RefreshCw className="w-3.5 h-3.5" />
-                <span>RE-SUBMIT CORRECT PAYMENT DETAILS</span>
-              </CyberButton>
-            </Link>
+          <div className="p-3.5 rounded-xl bg-cyber-surface/80 border border-cyber-border text-cyber-text-dim text-xs leading-relaxed flex items-start gap-2.5">
+            <Lock className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold text-cyber-text block mb-0.5">Re-submission Disabled</span>
+              Re-submission of payment details is locked. If you believe this rejection is a mistake or need assistance, please contact the student event coordinators directly via the contact links on the landing page.
+            </div>
           </div>
         </div>
       )}

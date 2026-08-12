@@ -33,10 +33,18 @@ function PaymentContent() {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Fetch registration & settings details
+  // Fetch registration & settings details and verify payment state
   useEffect(() => {
     async function loadData() {
       try {
+        const portalRes = await fetch('/api/portal/me');
+        const portalData = await portalRes.json();
+        if (portalData.success && portalData.payment?.status === 'rejected') {
+          toast.error('Payment re-submission is locked for this registration. Please contact event coordinators.');
+          router.replace('/portal');
+          return;
+        }
+
         const statsRes = await fetch('/api/event-stats');
         const statsData = await statsRes.json();
         if (statsData.success && statsData.stats) {
@@ -49,7 +57,7 @@ function PaymentContent() {
       }
     }
     loadData();
-  }, []);
+  }, [router]);
 
   const handleCopyUpi = () => {
     navigator.clipboard.writeText(upiId);
