@@ -33,16 +33,31 @@ const navItems = [
   { label: 'AUDIT LOGS', href: '/admin/audit-logs', icon: ShieldAlert },
 ];
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ isOpen, setIsOpen }: { isOpen?: boolean, setIsOpen?: (val: boolean) => void }) {
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 shrink-0 border-r border-cyber-border bg-cyber-bg-elevated/90 backdrop-blur-md flex flex-col justify-between p-4 font-mono text-xs">
-      {/* Brand Header */}
-      <div className="space-y-6">
-        <div className="p-2">
-          <BrandLogo variant="navbar" />
-        </div>
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => setIsOpen?.(false)}
+        />
+      )}
+      
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0 md:relative md:flex transition-transform duration-300 ease-in-out shrink-0 border-r border-cyber-border bg-cyber-bg-elevated/95 backdrop-blur-md flex-col justify-between p-4 font-mono text-xs overflow-y-auto`}>
+        {/* Brand Header */}
+        <div className="space-y-6">
+          <div className="p-2 flex items-center justify-between">
+            <BrandLogo variant="navbar" />
+            <button 
+              className="md:hidden p-2 text-cyber-text-muted hover:text-cyber-primary"
+              onClick={() => setIsOpen?.(false)}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
 
         {/* Navigation Items */}
         <nav className="space-y-1">
@@ -86,5 +101,6 @@ export default function AdminSidebar() {
         </button>
       </div>
     </aside>
+    </>
   );
 }

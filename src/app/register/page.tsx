@@ -28,6 +28,7 @@ function RegisterContent() {
   const [flowStage, setFlowStage] = useState<'guidelines' | 'terms' | 'form'>('guidelines');
   const [formStep, setFormStep] = useState<number>(1);
   const [submitting, setSubmitting] = useState(false);
+  const [successRegId, setSuccessRegId] = useState<string | null>(null);
   const [existingRegId, setExistingRegId] = useState<string | null>(null);
   const [checkingRegistration, setCheckingRegistration] = useState(true);
 
@@ -58,43 +59,37 @@ function RegisterContent() {
     }
   }, [session, form]);
 
-  // Check if current user already has an active registration on mount
   useEffect(() => {
-    async function checkExistingRegistration() {
-      if (status === 'authenticated') {
-        try {
-          const res = await fetch('/api/portal/me');
-          const data = await res.json();
+    if (status === 'unauthenticated') {
+      setCheckingRegistration(false);
+      return;
+    }
+
+    if (session?.user?.id) {
+      // Check if user already has an active registration
+      fetch('/api/portal/me')
+        .then((res) => res.json())
+        .then((data) => {
           if (data.success && data.registration) {
             setExistingRegId(data.registration.registrationId);
-            // Seamlessly redirect already-registered user straight to Portal
-            router.replace('/portal');
-            return;
           }
-        } catch (e) {
-          console.error('Error checking existing registration:', e);
-        } finally {
+        })
+        .catch(console.error)
+        .finally(() => {
           setCheckingRegistration(false);
-        }
-      } else if (status === 'unauthenticated') {
-        setCheckingRegistration(false);
-      }
+        });
     }
-    checkExistingRegistration();
-  }, [status, router]);
+  }, [session, status]);
 
-  // Handle Step Validation before advancing
+  // Handlers for progression
   const handleNextStep = async () => {
-    let fieldsToValidate: (keyof FullRegistrationInput)[] = [];
+    const fieldsToValidate =
+      formStep === 1
+        ? (['name', 'email', 'phone', 'college'] as const)
+        : (['registerNumber', 'department', 'year', 'section', 'creditType'] as const);
 
-    if (formStep === 1) {
-      fieldsToValidate = ['name', 'email', 'phone'];
-    } else if (formStep === 2) {
-      fieldsToValidate = ['registerNumber', 'department', 'year', 'section', 'college'];
-    }
-
-    const isValid = await form.trigger(fieldsToValidate);
-    if (isValid) {
+    const isStepValid = await form.trigger(fieldsToValidate);
+    if (isStepValid) {
       setFormStep((prev) => Math.min(TOTAL_STEPS, prev + 1));
     } else {
       toast.error('Please complete all mandatory fields.');
@@ -115,7 +110,7 @@ function RegisterContent() {
 
       if (res.ok && result.success) {
         toast.success(`✓ Registration confirmed: ${result.registrationId}`);
-        router.push(`/register/payment?regId=${result.registrationId}`);
+        setSuccessRegId(result.registrationId);
       } else if (res.status === 409 && result.registrationId) {
         setExistingRegId(result.registrationId);
         toast.info(result.error);
@@ -169,6 +164,43 @@ function RegisterContent() {
               <ArrowRight className="w-4 h-4" />
             </CyberButton>
           </Link>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // If registration just succeeded
+  if (successRegId) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4 min-h-[60vh]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-md cyber-glass-glow rounded-2xl p-8 border border-emerald-500/40 text-center space-y-6"
+        >
+          <div className="w-14 h-14 rounded-full bg-emerald-950/40 border border-emerald-500/40 mx-auto flex items-center justify-center text-emerald-400">
+            <CheckCircle2 className="w-7 h-7" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold font-mono text-emerald-400">
+              REGISTRATION SUCCESSFUL!
+            </h2>
+            <p className="text-xs font-mono text-cyber-text-muted mt-2">
+              Your registration profile has been created successfully.
+            </p>
+            <div className="mt-4 p-3 rounded-lg bg-cyber-bg border border-cyber-border font-mono text-sm font-bold text-cyber-primary">
+              ID: {successRegId}
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <Link href={`/register/payment?regId=${successRegId}`} className="block">
+              <CyberButton variant="primary" glow size="lg" className="w-full gap-2">
+                <span>PROCEED TO PAYMENT</span>
+                <ArrowRight className="w-4 h-4" />
+              </CyberButton>
+            </Link>
+          </div>
         </motion.div>
       </div>
     );

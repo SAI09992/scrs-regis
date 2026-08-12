@@ -47,6 +47,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const isAdmin = (session.user as any)?.role === 'admin';
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   if (!isAdmin) {
     return (
@@ -80,9 +81,23 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex min-h-screen bg-cyber-bg text-cyber-text font-sans">
-      <AdminSidebar />
-      <main className="flex-1 overflow-y-auto p-6 md:p-8 bg-cyber-bg/50">
-        {children}
+      <AdminSidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
+      <main className="flex-1 overflow-x-hidden overflow-y-auto w-full bg-cyber-bg/50">
+        <div className="md:hidden p-4 border-b border-cyber-border flex justify-between items-center bg-cyber-bg-elevated/95 backdrop-blur-md sticky top-0 z-40">
+          <Link href="/admin" className="font-bold text-cyber-primary font-mono tracking-widest text-lg flex items-center gap-2">
+            <Shield className="w-5 h-5 text-emerald-400" />
+            <span>SOC_ADMIN</span>
+          </Link>
+          <button 
+            onClick={() => setSidebarOpen(true)} 
+            className="p-2 bg-cyber-primary/10 border border-cyber-primary/30 rounded-md text-cyber-primary hover:bg-cyber-primary/20 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+          </button>
+        </div>
+        <div className="p-4 md:p-8">
+          {children}
+        </div>
       </main>
     </div>
   );
