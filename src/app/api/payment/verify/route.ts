@@ -5,7 +5,8 @@ import { adminPaymentDecisionSchema } from '@/lib/validation';
 import { requireAdmin } from '@/lib/auth';
 import { logAdminAction } from '@/lib/audit';
 import { broadcastRealtimeEvent } from '@/lib/realtime';
-import { eq } from 'drizzle-orm';
+import { eq, or, sql } from 'drizzle-orm';
+import { users } from '@/db/schema';
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,6 +14,16 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const { paymentId, decision, rejectionReason } = adminPaymentDecisionSchema.parse(body);
+
+    // Resolve dbUser ID for admin to satisfy payments_verified_by_users_id_fk constraint
+    const adminEmail = (admin.email || '').trim().toLowerCase();
+    const dbAdminList = await db
+      .select()
+      .from(users)
+      .where(or(eq(users.id, admin.id), sql`LOWER(${users.email}) = ${adminEmail}`))
+      .limit(1);
+
+    const dbAdminId = dbAdminList.length > 0 ? dbAdminList[0].id : null;
 
     // 1. Fetch Payment & Registration
     const paymentRecords = await db
@@ -38,7 +49,7 @@ export async function POST(req: NextRequest) {
       .set({
         status: decision,
         rejectionReason: decision === 'rejected' ? rejectionReason || 'Payment details could not be verified' : null,
-        verifiedBy: admin.id,
+        verifiedBy: dbAdminId,
         verifiedAt: now,
       })
       .where(eq(payments.id, paymentId));

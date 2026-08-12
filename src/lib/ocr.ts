@@ -21,6 +21,7 @@ function cleanDigits(str: string | null | undefined): string {
 
 /**
  * Intelligent regex parser to extract UPI/Bank transaction details from text
+ * Supports PhonePe, GPay, Paytm, CRED, YONO, BHIM & All Indian UPI Apps
  */
 export function parseTransactionText(
   rawText: string,
@@ -31,12 +32,18 @@ export function parseTransactionText(
   let extractedAmount: number | null = null;
   let extractedDate: string | null = null;
 
-  // 1. Extract UTR (12-digit number, UPI Ref, Txn ID)
+  // 1. Extract UTR / Ref No / Txn ID across all Indian UPI App formats
   const utrPatterns = [
-    /(?:UPI\s*Ref(?:\s*No|\s*ID)?|UTR|Txn\s*ID|Ref\s*No|Transaction\s*ID)[:\s#]*([A-Za-z0-9]{10,22})/i,
-    /\b(\d{12})\b/, // Standard 12-digit Indian UPI Reference ID
-    /\b([0-9]{4}\s+[0-9]{4}\s+[0-9]{4})\b/, // Spaced 12-digit
-    /\b([A-Z0-9]{12,18})\b/,
+    // PhonePe UTR format: "UTR: 767445299041" or "UTR 767445299041"
+    /(?:UTR|UTR\s*No|UTR\s*ID|UPI\s*Ref|Ref\s*No|Ref\s*ID|Transaction\s*ID|Txn\s*ID|Google\s*Pay\s*ID)[:\s#]*([A-Za-z0-9]{10,24})/i,
+    // PhonePe Transaction ID starting with T: e.g. T23081032220395606346477
+    /\b(T\d{20,24})\b/i,
+    // Standard 12-digit Indian UPI Reference ID (e.g., 423456789012 or 767445299041)
+    /\b(\d{12})\b/,
+    // Spaced 12-digit (e.g. 4234 5678 9012)
+    /\b([0-9]{4}\s+[0-9]{4}\s+[0-9]{4})\b/,
+    // Alphanumeric 10-22 char codes
+    /\b([A-Z0-9]{12,22})\b/,
   ];
 
   for (const pattern of utrPatterns) {
@@ -47,7 +54,7 @@ export function parseTransactionText(
     }
   }
 
-  // Check if expected UTR is present in raw OCR text
+  // Check if expected UTR or clean digits are present in raw OCR text
   const cleanUserUtr = cleanDigits(expectedUtr);
   const cleanRawText = cleanDigits(rawText);
   const cleanExtractedUtr = cleanDigits(extractedUtr);
@@ -59,15 +66,15 @@ export function parseTransactionText(
       (cleanExtractedUtr && cleanUserUtr.includes(cleanExtractedUtr)))
   );
 
-  // If user UTR is directly matched in OCR text, set extractedUtr to expectedUtr if OCR missed part of it
-  if (utrMatched && !extractedUtr) {
-    extractedUtr = expectedUtr || null;
+  // If user UTR is directly matched in raw OCR text, assign it if pattern extraction missed exact digits
+  if (utrMatched && (!extractedUtr || !extractedUtr.includes(expectedUtr!))) {
+    extractedUtr = expectedUtr || extractedUtr;
   }
 
-  // 2. Extract Amount (e.g. ₹300, ₹ 450.00, Rs. 300, INR 300)
+  // 2. Extract Fee Amount (e.g. ₹300, ₹ 300.00, Rs. 300, 300)
   const amountPatterns = [
     /(?:₹|INR|Rs\.?|Amount)\s*[:]?\s*([0-9,]+(?:\.[0-9]{2})?)/i,
-    /(?:Paid\s*to|Debited)\s*(?:₹|INR|Rs\.?)?\s*([0-9,]+(?:\.[0-9]{2})?)/i,
+    /(?:Paid\s*to|Debited|Total|Amount\s*Paid)\s*(?:₹|INR|Rs\.?)?\s*([0-9,]+(?:\.[0-9]{2})?)/i,
     /\b(300|450|600|900)\b/,
   ];
 
@@ -82,7 +89,6 @@ export function parseTransactionText(
     }
   }
 
-  // Check if expected amount is present in raw text
   const amountMatched = !!(
     expectedAmount &&
     (rawText.includes(expectedAmount.toString()) ||
@@ -109,12 +115,12 @@ export function parseTransactionText(
     }
   }
 
-  // Calculate confidence score strictly based on REAL OCR matches
+  // Calculate real confidence score
   let score = 0;
-  if (extractedUtr) score += 30;
+  if (extractedUtr) score += 35;
   if (utrMatched) score += 40;
   if (extractedAmount) score += 15;
-  if (amountMatched) score += 10;
+  if (amountMatched) score += 5;
   if (extractedDate) score += 5;
 
   return {
@@ -132,14 +138,14 @@ export function parseTransactionText(
 }
 
 /**
- * Process payment screenshot with Google Cloud Vision or clear manual fallback
+ * Process payment screenshot with Google Cloud Vision API
  */
 export async function analyzePaymentScreenshot(
   imageUrl: string,
   userUtr: string,
   userAmount: number
 ): Promise<OcrAnalysisResult> {
-  // If raw OCR text string is directly passed
+  // If raw text string is directly passed
   if (imageUrl && !imageUrl.startsWith('data:') && !imageUrl.startsWith('http')) {
     return parseTransactionText(imageUrl, userUtr, userAmount);
   }
@@ -175,17 +181,23 @@ export async function analyzePaymentScreenshot(
         );
 
         const data = await response.json();
+        if (data?.error) {
+          console.error('Google Cloud Vision API Error:', data.error);
+        }
+
         const detectedText = data?.responses?.[0]?.fullTextAnnotation?.text || '';
         if (detectedText) {
           return parseTransactionText(detectedText, userUtr, userAmount);
         }
       }
     } catch (err) {
-      console.warn('Google Cloud Vision call error, using manual verification queue:', err);
+      console.error('Google Cloud Vision fetch exception:', err);
     }
+  } else {
+    console.warn('GOOGLE_VISION_API_KEY is not set or imageUrl is empty. Screenshot queued for manual admin verification.');
   }
 
-  // Fallback: No Vision API key available or image OCR pending manual admin check.
+  // Fallback: No Vision API key or API call returned empty text.
   // Return clear non-matching result so Admin performs manual verification without fake matches!
   return {
     ocrUtr: null,
