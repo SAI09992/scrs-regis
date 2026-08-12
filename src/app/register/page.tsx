@@ -32,6 +32,7 @@ function RegisterContent() {
   const [existingRegId, setExistingRegId] = useState<string | null>(null);
   const [existingPaymentStatus, setExistingPaymentStatus] = useState<string | null>(null);
   const [checkingRegistration, setCheckingRegistration] = useState(true);
+  const [isConfirmed, setIsConfirmed] = useState(false);
 
   const form = useForm<FullRegistrationInput>({
     resolver: zodResolver(fullRegistrationSchema),
@@ -336,7 +337,12 @@ function RegisterContent() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10 }}
                   >
-                    <Step4Review form={form} onEditStep={(s) => setFormStep(s)} />
+                    <Step4Review 
+                      form={form} 
+                      onEditStep={(s) => setFormStep(s)} 
+                      isConfirmed={isConfirmed}
+                      setIsConfirmed={setIsConfirmed}
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -377,6 +383,7 @@ function RegisterContent() {
                     glow
                     size="lg"
                     loading={submitting}
+                    disabled={!isConfirmed}
                     className="gap-2"
                   >
                     <span>{submitting ? 'SUBMITTING...' : 'CONFIRM & PAY ₹300'}</span>

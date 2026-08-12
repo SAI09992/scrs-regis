@@ -8,9 +8,11 @@ import { Edit3, User, BookOpen, ShieldCheck, FileText, CheckCircle2 } from 'luci
 interface Props {
   form: UseFormReturn<FullRegistrationInput>;
   onEditStep: (stepNumber: number) => void;
+  isConfirmed: boolean;
+  setIsConfirmed: (val: boolean) => void;
 }
 
-export default function Step4Review({ form, onEditStep }: Props) {
+export default function Step4Review({ form, onEditStep, isConfirmed, setIsConfirmed }: Props) {
   const values = form.getValues();
 
   return (
@@ -127,10 +129,21 @@ export default function Step4Review({ form, onEditStep }: Props) {
         </div>
       </div>
 
-      {/* Confirmation Badge */}
-      <div className="flex items-center gap-2 p-3 rounded-lg bg-cyber-surface/80 border border-cyber-border text-emerald-400 text-[11px]">
-        <CheckCircle2 className="w-4 h-4 shrink-0" />
-        <span>I confirm that all previewed details above match my official university records.</span>
+      {/* Confirmation Checkbox */}
+      <div className="pt-2">
+        <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${isConfirmed ? 'bg-emerald-950/20 border-emerald-500/40' : 'bg-cyber-surface/40 border-cyber-border hover:bg-cyber-surface/60'}`}>
+          <input
+            type="checkbox"
+            checked={isConfirmed}
+            onChange={(e) => setIsConfirmed(e.target.checked)}
+            className="mt-0.5 flex-shrink-0 appearance-none w-4 h-4 border border-cyber-primary rounded bg-cyber-bg checked:bg-emerald-500 checked:border-emerald-500 transition-all relative
+              before:content-[''] before:absolute before:inset-0 before:bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSJ3aGl0ZSIgc3Ryb2tlLXdpZHRoPSIzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwb2x5bGluZSBwb2ludHM9IjIwIDYgOSAxNyA0IDEyIj48L3BvbHlsaW5lPjwvc3ZnPg==')] 
+              before:bg-center before:bg-no-repeat before:bg-[length:12px_12px] before:opacity-0 checked:before:opacity-100"
+          />
+          <span className={`text-[11px] leading-relaxed transition-colors ${isConfirmed ? 'text-emerald-400' : 'text-cyber-text-muted'}`}>
+            I verify that all the information provided above is accurate. I understand that submitting this form will confirm my registration slot and require an immediate payment of ₹300.
+          </span>
+        </label>
       </div>
     </div>
   );
