@@ -14,13 +14,15 @@ import FaqSection from '@/components/landing/FaqSection';
 import CoordinatorsSection from '@/components/landing/CoordinatorsSection';
 import OrganizerBrandingSection from '@/components/landing/OrganizerBrandingSection';
 import Footer from '@/components/landing/Footer';
+import PreloaderWrapper from '@/components/animations/PreloaderWrapper';
 
 export default function LandingPage() {
   return (
-    <main className="relative min-h-screen text-cyber-text overflow-x-hidden selection:bg-cyber-primary selection:text-cyber-bg">
-      {/* Structured Landing Page Flow */}
-      <div className="relative z-10 flex flex-col min-h-screen">
-        {/* Section 1: Navbar with BrandLogo & Login */}
+    <main className="relative min-h-screen text-cyber-text overflow-x-hidden selection:bg-cyber-primary selection:text-cyber-bg bg-cyber-bg">
+      <PreloaderWrapper>
+        {/* Structured Landing Page Flow */}
+        <div className="relative z-10 flex flex-col min-h-screen">
+          {/* Section 1: Navbar with BrandLogo & Login */}
         <CyberNavbar />
 
         {/* Section 2: Hero with Visual & SCRS Branding */}
@@ -68,6 +70,7 @@ export default function LandingPage() {
         {/* Section 16: Footer */}
         <Footer />
       </div>
+      </PreloaderWrapper>
     </main>
   );
 }
