@@ -5,7 +5,8 @@ import { fullRegistrationSchema } from '@/lib/validation';
 import { getCurrentUser } from '@/lib/auth';
 import { generateRegistrationId } from '@/lib/utils';
 import { broadcastRealtimeEvent } from '@/lib/realtime';
-import { eq, or, sql } from 'drizzle-orm';
+import { eq, or, sql, inArray, count } from 'drizzle-orm';
+import { payments } from '@/db/schema';
 
 export async function POST(req: NextRequest) {
   try {
@@ -88,20 +89,20 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Count total registrations
+    // Count total completed/pending payments (actual booked seats)
     const currentCounts = await db
       .select({
-        total: sql<number>`count(*)::int`,
+        total: count(),
       })
-      .from(registrations)
-      .where(eq(registrations.status, 'registered'));
+      .from(payments)
+      .where(inArray(payments.status, ['pending', 'verified']));
 
     const counts = currentCounts[0] || { total: 0 };
-    const totalCapacity = (settings as any).totalCapacity || 200;
+    const totalCapacity = (settings as any).totalCapacity || 500;
 
     if (counts.total >= totalCapacity) {
       return NextResponse.json(
-        { success: false, error: 'All 200 bootcamp seats have been filled.' },
+        { success: false, error: 'The bootcamp has reached maximum capacity.' },
         { status: 400 }
       );
     }

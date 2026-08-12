@@ -33,6 +33,7 @@ function RegisterContent() {
   const [existingPaymentStatus, setExistingPaymentStatus] = useState<string | null>(null);
   const [checkingRegistration, setCheckingRegistration] = useState(true);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [isSoldOut, setIsSoldOut] = useState(false);
 
   const form = useForm<FullRegistrationInput>({
     resolver: zodResolver(fullRegistrationSchema),
@@ -68,13 +69,18 @@ function RegisterContent() {
     }
 
     if (session?.user?.email) {
-      // Check if user already has an active registration
-      fetch('/api/portal/me')
-        .then((res) => res.json())
-        .then((data) => {
-          if (data.success && data.registration) {
-            setExistingRegId(data.registration.registrationId);
-            setExistingPaymentStatus(data.payment ? data.payment.status : 'unpaid');
+      // Check if user already has an active registration and check capacity
+      Promise.all([
+        fetch('/api/portal/me').then(res => res.json()),
+        fetch('/api/capacity').then(res => res.json())
+      ])
+        .then(([userData, capacityData]) => {
+          if (userData.success && userData.registration) {
+            setExistingRegId(userData.registration.registrationId);
+            setExistingPaymentStatus(userData.payment ? userData.payment.status : 'unpaid');
+          }
+          if (capacityData.success && capacityData.isSoldOut) {
+            setIsSoldOut(true);
           }
         })
         .catch(console.error)
@@ -258,6 +264,38 @@ function RegisterContent() {
                 </CyberButton>
               </Link>
             )}
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // If sold out and no existing registration
+  if (isSoldOut && !existingRegId) {
+    return (
+      <div className="flex-1 flex items-center justify-center p-4 min-h-[60vh]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-md cyber-glass-glow rounded-2xl p-8 border border-rose-500/40 text-center space-y-6"
+        >
+          <div className="w-14 h-14 rounded-full bg-rose-950/40 border-rose-500/40 mx-auto flex items-center justify-center text-rose-400">
+            <Lock className="w-7 h-7" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold font-mono text-rose-400">
+              BOOTCAMP SOLD OUT
+            </h2>
+            <p className="text-xs font-mono text-cyber-text-muted mt-2 leading-relaxed">
+              We have officially reached maximum capacity. All available slots for NEXTGEN SOC Bootcamp are currently booked.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link href="/" className="block">
+              <CyberButton variant="secondary" size="lg" className="w-full">
+                RETURN HOME
+              </CyberButton>
+            </Link>
           </div>
         </motion.div>
       </div>

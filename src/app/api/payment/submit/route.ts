@@ -5,7 +5,7 @@ import { paymentSubmissionSchema } from '@/lib/validation';
 import { getCurrentUser } from '@/lib/auth';
 import { analyzePaymentScreenshot } from '@/lib/ocr';
 import { broadcastRealtimeEvent } from '@/lib/realtime';
-import { eq } from 'drizzle-orm';
+import { eq, inArray, count } from 'drizzle-orm';
 
 export async function POST(req: NextRequest) {
   try {
@@ -79,8 +79,27 @@ export async function POST(req: NextRequest) {
     // 4. Calculate Expected Fee based on Credit Type
     const settings = (await db.select().from(eventSettings).limit(1))[0] || {
       registrationFee: 300,
+      totalCapacity: 500
     };
     const expectedAmount = (settings as any).registrationFee || 300;
+    const totalCapacity = (settings as any).totalCapacity || 500;
+
+    // 4.5 SMART LOCK: Check Capacity if this is a new payment
+    if (existingPayment.length === 0 || existingPayment[0].status === 'rejected') {
+      const currentCounts = await db
+        .select({ total: count() })
+        .from(payments)
+        .where(inArray(payments.status, ['pending', 'verified']));
+        
+      const bookedCount = currentCounts[0]?.total || 0;
+      
+      if (bookedCount >= totalCapacity) {
+        return NextResponse.json(
+          { success: false, error: 'Payment rejected: The bootcamp has just reached maximum capacity.' },
+          { status: 403 }
+        );
+      }
+    }
 
     // 5. Run Fast OCR Analysis using external free API
     const ocrResult = await analyzePaymentScreenshot(
