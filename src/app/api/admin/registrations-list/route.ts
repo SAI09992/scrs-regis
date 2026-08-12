@@ -80,9 +80,9 @@ export async function DELETE(req: NextRequest) {
       .where(eq(payments.registrationId, reg.id))
       .limit(1);
 
-    if (existingPayment.length > 0 && existingPayment[0].paymentScreenshotUrl) {
+    if (existingPayment.length > 0 && existingPayment[0].screenshotUrl) {
       try {
-        await del(existingPayment[0].paymentScreenshotUrl);
+        await del(existingPayment[0].screenshotUrl);
       } catch (err) {
         console.error('Failed to delete blob from vercel storage:', err);
       }

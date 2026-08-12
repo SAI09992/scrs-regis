@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
           paymentStatus: payments.status,
           utr: payments.utr,
           amount: payments.amount,
-          paymentScreenshotUrl: payments.paymentScreenshotUrl,
+          screenshotUrl: payments.screenshotUrl,
           createdAt: registrations.createdAt,
         })
         .from(registrations)
@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
         'UTR': r.utr || '',
         'Amount (INR)': r.amount || 0,
         'Registered At': new Date(r.createdAt).toLocaleString(),
-        'Screenshot Blob Link': r.paymentScreenshotUrl || ''
+        'Screenshot Blob Link': r.screenshotUrl || ''
       }));
 
       const worksheet = XLSX.utils.json_to_sheet(excelData);
