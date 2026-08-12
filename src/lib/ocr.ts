@@ -138,20 +138,33 @@ export async function analyzePaymentScreenshot(
   userAmount: number
 ): Promise<OcrAnalysisResult> {
   try {
-    const { createWorker } = await import('tesseract.js');
-    const worker = await createWorker('eng');
-    
-    // Tesseract.js can accept base64 Data URLs or external URLs
-    const ret = await worker.recognize(imageUrl);
-    const rawText = ret.data.text || '';
-    
-    await worker.terminate();
+    // We use the fast, free OCR.space API to prevent backend freezing,
+    // avoid 30s delays, and bypass Google Vision billing issues.
+    const formData = new FormData();
+    formData.append('base64Image', imageUrl);
+    formData.append('language', 'eng');
+    formData.append('scale', 'true');
+    formData.append('isOverlayRequired', 'false');
 
-    if (rawText.trim().length > 5) {
-      return parseTransactionText(rawText, userUtr, userAmount);
+    const response = await fetch('https://api.ocr.space/parse/image', {
+      method: 'POST',
+      headers: {
+        'apikey': 'helloworld', // Free public API key
+      },
+      body: formData,
+    });
+
+    const result = await response.json();
+    
+    if (result && result.ParsedResults && result.ParsedResults.length > 0) {
+      const rawText = result.ParsedResults[0].ParsedText || '';
+      
+      if (rawText.trim().length > 5) {
+        return parseTransactionText(rawText, userUtr, userAmount);
+      }
     }
   } catch (error) {
-    console.error('Server-side Tesseract OCR failed:', error);
+    console.error('OCR.space fast API failed:', error);
   }
 
   // Fallback if OCR fails

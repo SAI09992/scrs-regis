@@ -82,15 +82,12 @@ export async function POST(req: NextRequest) {
     };
     const expectedAmount = (settings as any).registrationFee || 300;
 
-    // 5. Skip slow OCR processing on submission for instant response
-    // (Admin will verify screenshot manually to avoid 30-second submission delays)
-    const ocrResult = {
-      ocrUtr: null,
-      ocrAmount: null,
-      ocrDate: null,
-      ocrConfidence: 0,
-      matchedFields: { utrMatched: false, amountMatched: false, dateMatched: false },
-    };
+    // 5. Run Fast OCR Analysis using external free API
+    const ocrResult = await analyzePaymentScreenshot(
+      validatedData.screenshotUrl,
+      validatedData.utr.trim().toUpperCase(),
+      validatedData.amount
+    );
 
     // 6. Insert or Update Payment Record
     const paymentId = existingPayment.length > 0 ? existingPayment[0].id : `pay_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
