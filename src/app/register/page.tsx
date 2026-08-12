@@ -65,7 +65,7 @@ function RegisterContent() {
       return;
     }
 
-    if (session?.user?.id) {
+    if (session?.user?.email) {
       // Check if user already has an active registration
       fetch('/api/portal/me')
         .then((res) => res.json())
