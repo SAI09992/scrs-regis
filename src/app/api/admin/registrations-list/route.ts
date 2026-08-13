@@ -30,6 +30,7 @@ export async function GET() {
         paymentStatus: payments.status,
         amount: payments.amount,
         utr: payments.utr,
+        screenshotUrl: payments.screenshotUrl,
       })
       .from(registrations)
       .leftJoin(payments, eq(registrations.id, payments.registrationId))

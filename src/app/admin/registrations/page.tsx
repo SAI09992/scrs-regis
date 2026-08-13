@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   X,
   CheckCircle2,
+  Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -27,6 +28,9 @@ export default function AdminRegistrationsPage() {
   // Deletion modal state
   const [deletingRecord, setDeletingRecord] = useState<any | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // Inspect modal state
+  const [inspectingRecord, setInspectingRecord] = useState<any | null>(null);
 
   const fetchRegistrations = async () => {
     try {
@@ -207,7 +211,14 @@ export default function AdminRegistrationsPage() {
                       <StatusBadge status={r.paymentStatus || 'unpaid'} />
                     </td>
                     <td className="p-4 text-cyber-text-dim">{formatDate(r.createdAt)}</td>
-                    <td className="p-4 text-center">
+                    <td className="p-4 text-center space-x-2">
+                      <button
+                        onClick={() => setInspectingRecord(r)}
+                        className="p-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-900/60 hover:text-emerald-300 transition-colors shadow-sm"
+                        title="Inspect Application & Payment"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => setDeletingRecord(r)}
                         className="p-1.5 rounded-lg bg-red-950/40 border border-red-500/40 text-red-400 hover:bg-red-900/60 hover:text-red-300 transition-colors shadow-sm"
@@ -270,6 +281,126 @@ export default function AdminRegistrationsPage() {
                 <Trash2 className="w-4 h-4" />
                 <span>{deleteLoading ? 'DELETING...' : 'YES, DELETE REGISTRATION'}</span>
               </button>
+            </div>
+          </div>
+        </div>
+      {/* Inspect Record Modal */}
+      {inspectingRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto cyber-glass-glow rounded-2xl p-6 border border-cyber-border shadow-[0_0_40px_rgba(0,229,255,0.15)] space-y-6">
+            <div className="flex items-center justify-between pb-4 border-b border-cyber-border">
+              <div className="flex items-center gap-2 text-cyber-text font-bold">
+                <Eye className="w-5 h-5 text-cyber-primary" />
+                <span className="text-sm">CADET DOSSIER: {inspectingRecord.registrationId}</span>
+              </div>
+              <button
+                onClick={() => setInspectingRecord(null)}
+                className="p-1 rounded-md text-cyber-text-dim hover:text-cyber-text hover:bg-cyber-surface/50"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+              {/* Profile Details */}
+              <div className="space-y-4">
+                <h3 className="font-bold text-cyber-primary uppercase border-b border-cyber-border/40 pb-2">
+                  Academic Profile
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-cyber-text-dim">Full Name</span>
+                    <span className="font-bold text-cyber-text">{inspectingRecord.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-cyber-text-dim">Email</span>
+                    <span className="font-bold text-cyber-text">{inspectingRecord.email}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-cyber-text-dim">Phone</span>
+                    <span className="font-bold text-cyber-text">{inspectingRecord.phone}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-cyber-text-dim">College</span>
+                    <span className="font-bold text-cyber-text text-right max-w-[200px] truncate" title={inspectingRecord.college}>{inspectingRecord.college}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-cyber-text-dim">Roll Number</span>
+                    <span className="font-bold text-cyber-text">{inspectingRecord.registerNumber}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-cyber-text-dim">Dept / Year / Sec</span>
+                    <span className="font-bold text-cyber-text">
+                      {inspectingRecord.department} / {inspectingRecord.year} / {inspectingRecord.section}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-cyber-text-dim">Track Registered</span>
+                    <span className="font-bold text-emerald-400">
+                      {inspectingRecord.creditType === 'UE_CSE' ? 'PE — CSE' : 'UE — OTHER'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Payment Details */}
+              <div className="space-y-4">
+                <h3 className="font-bold text-cyber-primary uppercase border-b border-cyber-border/40 pb-2">
+                  Payment Profile
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-cyber-text-dim">Status</span>
+                    <StatusBadge status={inspectingRecord.paymentStatus || 'unpaid'} />
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-cyber-text-dim">Amount Paid</span>
+                    <span className="font-bold text-cyber-text">₹{inspectingRecord.amount || 0}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-cyber-text-dim">UTR Number</span>
+                    <span className="font-bold text-cyber-text font-mono bg-cyber-surface px-1.5 py-0.5 rounded border border-cyber-border">
+                      {inspectingRecord.utr || 'N/A'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <span className="text-cyber-text-dim block mb-2">Payment Screenshot</span>
+                  {inspectingRecord.screenshotUrl ? (
+                    <a
+                      href={inspectingRecord.screenshotUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block group relative rounded-lg overflow-hidden border border-cyber-border hover:border-cyber-primary transition-colors bg-cyber-surface/30 p-2"
+                    >
+                      <div className="aspect-[4/3] relative flex items-center justify-center overflow-hidden rounded">
+                        {inspectingRecord.screenshotUrl.length > 32000 ? (
+                          <div className="text-center p-4">
+                            <Eye className="w-8 h-8 text-cyber-primary mx-auto mb-2 opacity-50" />
+                            <p className="text-[10px] text-cyber-text-muted">Base64 Image Data.<br/>Cannot preview reliably.</p>
+                          </div>
+                        ) : (
+                          <img
+                            src={inspectingRecord.screenshotUrl}
+                            alt="Payment Proof"
+                            className="w-full h-full object-contain"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <div className="flex items-center gap-2 text-white font-bold bg-cyber-bg-elevated/90 px-3 py-1.5 rounded-lg border border-cyber-border">
+                            <Eye className="w-4 h-4" /> View Full Image
+                          </div>
+                        </div>
+                      </div>
+                    </a>
+                  ) : (
+                    <div className="p-4 rounded-lg bg-cyber-surface border border-cyber-border border-dashed text-center text-cyber-text-muted">
+                      No screenshot provided.
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
