@@ -79,6 +79,8 @@ export default function AdminSettingsPage() {
     contactPhone: '+91 98765 43210',
     contactEmail: 'scrs@university.edu',
     termsVersion: 'v1.0',
+    whatsappGroupLink: '',
+    whatsappGroupQrUrl: '',
   });
 
   const fetchCoordinators = async () => {
@@ -106,6 +108,8 @@ export default function AdminSettingsPage() {
             dates: data.settings.dates || 'August 29 – 30, 2026',
             venue: data.settings.venue || 'TIFAC Core Seminar Hall',
             totalCapacity: data.settings.totalCapacity || 200,
+            whatsappGroupLink: data.settings.whatsappGroupLink || '',
+            whatsappGroupQrUrl: data.settings.whatsappGroupQrUrl || '',
           }));
 
           if (
@@ -559,6 +563,40 @@ export default function AdminSettingsPage() {
               value={settings.paymentQrUrl || ''}
               onChange={(url) => setSettings((prev) => ({ ...prev, paymentQrUrl: url }))}
               description="Directly upload any JPEG, JPG, PNG, WEBP, or SVG image file from your device, or switch to paste a URL. If left empty, a crisp vector QR code will be automatically generated from your UPI ID."
+              placeholder="https://... or click 'Direct Upload' above"
+            />
+          </div>
+        </div>
+
+        {/* Section: WhatsApp Group Link & QR */}
+        <div className="p-6 rounded-2xl cyber-glass border border-emerald-500/40 space-y-4">
+          <div className="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
+            <MessageSquare className="w-4 h-4" />
+            <span>WHATSAPP GROUP LINK & QR CODE</span>
+          </div>
+          <p className="text-[11px] text-cyber-text-muted">
+            Configure the WhatsApp group invite link and optional QR code image. This link appears in the top navbar and on the Cadet Portal after payment.
+          </p>
+
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-cyber-text block font-bold text-xs">WhatsApp Group Invite Link</label>
+              <input
+                type="text"
+                value={settings.whatsappGroupLink}
+                onChange={(e) =>
+                  setSettings((prev) => ({ ...prev, whatsappGroupLink: e.target.value }))
+                }
+                placeholder="e.g. https://chat.whatsapp.com/ABCDefGHIjk123"
+                className="w-full px-3.5 py-2.5 rounded-lg bg-cyber-surface border border-cyber-border text-cyber-text text-sm focus:outline-none focus:border-emerald-400"
+              />
+            </div>
+
+            <ImageUploadField
+              label="WhatsApp Group QR Code Image (Optional)"
+              value={settings.whatsappGroupQrUrl}
+              onChange={(url) => setSettings((prev) => ({ ...prev, whatsappGroupQrUrl: url }))}
+              description="Upload a QR code image for joining the WhatsApp group. Displayed on the Cadet Portal alongside the direct invite link."
               placeholder="https://... or click 'Direct Upload' above"
             />
           </div>

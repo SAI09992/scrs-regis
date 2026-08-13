@@ -191,12 +191,78 @@ export default function ParticipantPortalPage() {
           </div>
         )}
 
+        {/* WhatsApp Group Join Card - visible after payment */}
+        {payment && <WhatsAppJoinCard />}
+
         {/* Lifecycle Progression Timeline */}
         <RegistrationTimeline
           paymentStatus={payment?.status}
           attendance={attendance}
           hasCertificate={!!certificate || isEligibleForCert}
         />
+      </div>
+    </div>
+  );
+}
+
+function WhatsAppJoinCard() {
+  const [whatsappLink, setWhatsappLink] = useState<string | null>(null);
+  const [whatsappQr, setWhatsappQr] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/event-stats')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.stats) {
+          setWhatsappLink(data.stats.whatsappGroupLink || null);
+          setWhatsappQr(data.stats.whatsappGroupQrUrl || null);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  if (!whatsappLink) return null;
+
+  return (
+    <div className="p-6 rounded-2xl cyber-glass border border-emerald-500/40 bg-emerald-950/10 space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-emerald-950/60 border border-emerald-500 text-emerald-400 flex items-center justify-center shrink-0">
+          <ExternalLink className="w-5 h-5" />
+        </div>
+        <div>
+          <h3 className="text-sm font-bold font-mono text-emerald-400">
+            JOIN OFFICIAL WHATSAPP GROUP
+          </h3>
+          <p className="text-[11px] text-cyber-text-muted mt-0.5">
+            Stay updated with announcements, schedule changes, and connect with fellow cadets.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-center gap-4">
+        {whatsappQr && (
+          <div className="w-40 h-40 rounded-xl overflow-hidden border border-emerald-500/30 bg-white p-2 shrink-0">
+            <img
+              src={whatsappQr}
+              alt="WhatsApp Group QR Code"
+              className="w-full h-full object-contain"
+            />
+          </div>
+        )}
+        <div className="flex-1 space-y-3 text-center sm:text-left">
+          <p className="text-xs text-cyber-text-muted font-mono">
+            {whatsappQr ? 'Scan the QR code or click the button below to join instantly.' : 'Click the button below to join instantly.'}
+          </p>
+          <a
+            href={whatsappLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold font-mono text-xs transition-all shadow-lg"
+          >
+            <ExternalLink className="w-4 h-4" />
+            JOIN WHATSAPP GROUP
+          </a>
+        </div>
       </div>
     </div>
   );

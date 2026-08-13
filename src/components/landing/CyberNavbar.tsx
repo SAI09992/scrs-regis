@@ -1,18 +1,30 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSession, signOut } from 'next-auth/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 import { CyberButton } from '@/components/ui/CyberButton';
-import { Menu, X, Terminal, LayoutDashboard, LogOut, ArrowRight, LogIn, User } from 'lucide-react';
+import { Menu, X, Terminal, LayoutDashboard, LogOut, ArrowRight, LogIn, User, MessageCircle } from 'lucide-react';
 
 export default function CyberNavbar() {
   const { data: session } = useSession();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const isAdmin = (session?.user as any)?.role === 'admin';
+  const [whatsappLink, setWhatsappLink] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch('/api/event-stats')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.stats?.whatsappGroupLink) {
+          setWhatsappLink(data.stats.whatsappGroupLink);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const navLinks = [
     { label: 'Overview', href: '#about' },
@@ -49,6 +61,18 @@ export default function CyberNavbar() {
 
         {/* Action Buttons: Desktop & Tablet */}
         <div className="flex items-center gap-2.5">
+          {whatsappLink && (
+            <a
+              href={whatsappLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-400 hover:bg-emerald-900/50 hover:border-emerald-400 font-mono text-[11px] font-bold transition-all"
+              title="Join WhatsApp Group"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">JOIN WHATSAPP</span>
+            </a>
+          )}
           {session ? (
             <div className="flex items-center gap-2">
               {isAdmin ? (
@@ -135,6 +159,18 @@ export default function CyberNavbar() {
             </nav>
 
             <div className="pt-4 border-t border-cyber-border/80 flex flex-col gap-2.5">
+              {whatsappLink && (
+                <a
+                  href={whatsappLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/30 text-emerald-400 font-bold text-center text-xs flex items-center justify-center gap-2"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  JOIN WHATSAPP GROUP
+                </a>
+              )}
               {session ? (
                 <>
                   <Link

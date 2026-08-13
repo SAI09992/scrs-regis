@@ -244,6 +244,8 @@ export const eventSettings = pgTable('event_settings', {
   contactEmail: text('contact_email').notNull().default('soc-support@nextgensoc.io'),
   termsVersion: text('terms_version').notNull().default('v1.0'),
   coordinators: jsonb('coordinators'),
+  whatsappGroupLink: text('whatsapp_group_link'),
+  whatsappGroupQrUrl: text('whatsapp_group_qr_url'),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 

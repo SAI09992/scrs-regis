@@ -89,6 +89,8 @@ const DEFAULT_COORDINATORS = [
       paymentUpiId: (settings as any).paymentUpiId || 'scrs@upi',
       paymentQrUrl: (settings as any).paymentQrUrl || null,
       coordinators: (settings as any).coordinators || DEFAULT_COORDINATORS,
+      whatsappGroupLink: (settings as any).whatsappGroupLink || null,
+      whatsappGroupQrUrl: (settings as any).whatsappGroupQrUrl || null,
     };
 
     cachedStats = computedStats;
