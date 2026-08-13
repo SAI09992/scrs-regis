@@ -34,23 +34,32 @@ export async function GET(req: NextRequest) {
         .from(registrations)
         .leftJoin(payments, eq(registrations.id, payments.registrationId));
 
-      const excelData = records.map(r => ({
-        'Registration ID': r.registrationId,
-        'Name': r.name,
-        'Email': r.email,
-        'Phone': r.phone,
-        'Register Number': r.registerNumber,
-        'Department': r.department,
-        'Year': r.year,
-        'Section': r.section,
-        'College': r.college,
-        'Credit Type': r.creditType,
-        'Payment Status': r.paymentStatus || 'unpaid',
-        'UTR': r.utr || '',
-        'Amount (INR)': r.amount || 0,
-        'Registered At': new Date(r.createdAt).toLocaleString(),
-        'Screenshot Blob Link': r.screenshotUrl || ''
-      }));
+      const excelData = records.map(r => {
+        let screenshot = r.screenshotUrl || '';
+        // Excel cells cannot exceed 32,767 characters. 
+        // If an image was saved as a Base64 string instead of a Vercel Blob URL, it will crash the export.
+        if (screenshot.length > 32000) {
+          screenshot = '[Base64 Image Data - Too Large for Excel Export]';
+        }
+
+        return {
+          'Registration ID': r.registrationId,
+          'Name': r.name,
+          'Email': r.email,
+          'Phone': r.phone,
+          'Register Number': r.registerNumber,
+          'Department': r.department,
+          'Year': r.year,
+          'Section': r.section,
+          'College': r.college,
+          'Credit Type': r.creditType,
+          'Payment Status': r.paymentStatus || 'unpaid',
+          'UTR': r.utr || '',
+          'Amount (INR)': r.amount || 0,
+          'Registered At': new Date(r.createdAt).toLocaleString(),
+          'Screenshot Blob Link': screenshot
+        };
+      });
 
       const worksheet = XLSX.utils.json_to_sheet(excelData);
       const workbook = XLSX.utils.book_new();
