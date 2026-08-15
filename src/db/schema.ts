@@ -230,7 +230,7 @@ export const eventSettings = pgTable('event_settings', {
   id: text('id').primaryKey(),
   eventName: text('event_name').notNull().default('NEXTGEN SOC'),
   tagline: text('tagline').notNull().default('Detect. Defend. Respond.'),
-  dates: text('dates').notNull().default('August 22 - 23, 2026'),
+  dates: text('dates').notNull().default('August 29 – 30, 2026'),
   venue: text('venue').notNull().default('Main Cyber Range Auditorium & SOC Lab 4'),
   registrationFeeUe: integer('registration_fee_ue').notNull().default(300),
   registrationFeeOther: integer('registration_fee_other').notNull().default(450),

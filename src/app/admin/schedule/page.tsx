@@ -148,8 +148,8 @@ export default function AdminSchedulePage() {
                   onChange={(e) => setDay(Number(e.target.value) as 1 | 2)}
                   className="w-full px-3.5 py-2.5 rounded-lg bg-cyber-surface border border-cyber-border text-cyber-text text-xs focus:outline-none focus:border-cyber-primary"
                 >
-                  <option value={1}>Day 1 (Aug 22)</option>
-                  <option value={2}>Day 2 (Aug 23)</option>
+                  <option value={1}>Day 1 (Aug 29)</option>
+                  <option value={2}>Day 2 (Aug 30)</option>
                 </select>
               </div>
 

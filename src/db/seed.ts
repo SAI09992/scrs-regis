@@ -12,7 +12,7 @@ export async function seedDatabase() {
       id: 'settings_default',
       eventName: 'NEXTGEN SOC',
       tagline: 'Detect. Defend. Respond.',
-      dates: 'August 22 - 23, 2026',
+      dates: 'August 29 – 30, 2026',
       venue: 'Main Cyber Range Auditorium & SOC Lab 4',
       registrationFeeUe: 300,
       registrationFeeOther: 450,

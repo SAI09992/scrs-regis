@@ -64,7 +64,7 @@ export default function SchedulePreview() {
           </h2>
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-mono text-cyber-text-muted pt-1">
             <span className="flex items-center gap-1 text-cyber-primary">
-              <Calendar className="w-3.5 h-3.5" /> August 22 - 23, 2026
+              <Calendar className="w-3.5 h-3.5" /> August 29 – 30, 2026
             </span>
             <span>•</span>
             <span className="flex items-center gap-1 text-cyber-text">

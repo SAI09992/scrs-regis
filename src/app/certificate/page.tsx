@@ -155,7 +155,7 @@ export default function CertificatePage() {
 
           {/* Description */}
           <div className="relative z-10 max-w-2xl mx-auto text-xs sm:text-sm font-mono text-cyber-text-muted leading-relaxed">
-            For successfully completing the intensive 2-day hands-on <strong className="text-cyber-text">Security Operations Centre Analyst Bootcamp</strong> on August 22 - 23, 2026, demonstrating proficiency in SIEM Log Telemetry, Wireshark Packet Forensics, Memory Threat Hunting, and Live Incident Containment.
+            For successfully completing the intensive 2-day hands-on <strong className="text-cyber-text">Security Operations Centre Analyst Bootcamp</strong> on August 29 - 30, 2026, demonstrating proficiency in SIEM Log Telemetry, Wireshark Packet Forensics, Memory Threat Hunting, and Live Incident Containment.
           </div>
 
           {/* Footer Signatures & QR Verification */}
