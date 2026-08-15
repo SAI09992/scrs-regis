@@ -37,7 +37,7 @@ export default function EventSpecsSection() {
       icon: Calendar,
       label: 'BOOTCAMP DATES',
       value: specs.dates,
-      highlight: 'Friday & Saturday',
+      highlight: 'Saturday & Sunday',
     },
     {
       icon: Clock,
