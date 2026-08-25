@@ -81,6 +81,7 @@ export default function AdminSettingsPage() {
     termsVersion: 'v1.0',
     whatsappGroupLink: '',
     whatsappGroupQrUrl: '',
+    registrationCountBoost: 0,
   });
 
   const fetchCoordinators = async () => {
@@ -110,6 +111,7 @@ export default function AdminSettingsPage() {
             totalCapacity: data.settings.totalCapacity || 200,
             whatsappGroupLink: data.settings.whatsappGroupLink || '',
             whatsappGroupQrUrl: data.settings.whatsappGroupQrUrl || '',
+            registrationCountBoost: data.settings.registrationCountBoost || 0,
           }));
 
           if (
@@ -532,6 +534,61 @@ export default function AdminSettingsPage() {
                   className="w-full px-3.5 py-2.5 rounded-lg bg-cyber-surface border border-cyber-border text-cyber-text text-sm font-bold focus:outline-none focus:border-cyber-primary"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Registration Count Boost */}
+          <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/40 space-y-3 mt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-amber-400 block font-bold text-xs flex items-center gap-1.5">
+                  ⚡ DISPLAYED REGISTRATION COUNT BOOST
+                </label>
+                <p className="text-[10px] text-cyber-text-dim mt-0.5">
+                  Adds a fake offset to the publicly shown registration count to create urgency. Real data is unaffected.
+                </p>
+              </div>
+              <span className="text-xs font-bold text-amber-400 bg-amber-950/60 border border-amber-500/30 px-2.5 py-1 rounded-lg">
+                +{settings.registrationCountBoost}
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-[11px] text-cyber-text-dim mr-1">ADJUST BOOST:</span>
+              {[-50, -10, -5].map((v) => (
+                <button
+                  key={`boost${v}`}
+                  type="button"
+                  onClick={() => setSettings((prev) => ({ ...prev, registrationCountBoost: Math.max(0, prev.registrationCountBoost + v) }))}
+                  className="px-3 py-1.5 rounded-lg bg-red-950/40 border border-red-500/40 text-red-400 font-bold hover:bg-red-900/60 transition-colors"
+                >
+                  {v}
+                </button>
+              ))}
+              <div className="h-6 w-px bg-cyber-border mx-1" />
+              {[5, 10, 25, 50].map((v) => (
+                <button
+                  key={`boost+${v}`}
+                  type="button"
+                  onClick={() => setSettings((prev) => ({ ...prev, registrationCountBoost: prev.registrationCountBoost + v }))}
+                  className="px-3 py-1.5 rounded-lg bg-amber-950/40 border border-amber-500/40 text-amber-400 font-bold hover:bg-amber-900/60 transition-colors"
+                >
+                  +{v}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-cyber-text block font-bold text-[11px]">Exact Boost Value</label>
+              <input
+                type="number"
+                min={0}
+                value={settings.registrationCountBoost}
+                onChange={(e) =>
+                  setSettings((prev) => ({ ...prev, registrationCountBoost: Math.max(0, Number(e.target.value)) }))
+                }
+                className="w-full sm:w-48 px-3.5 py-2.5 rounded-lg bg-cyber-surface border border-amber-500/40 text-cyber-text text-sm font-bold focus:outline-none focus:border-amber-400"
+              />
             </div>
           </div>
         </div>

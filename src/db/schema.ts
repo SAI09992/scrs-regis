@@ -246,6 +246,7 @@ export const eventSettings = pgTable('event_settings', {
   coordinators: jsonb('coordinators'),
   whatsappGroupLink: text('whatsapp_group_link'),
   whatsappGroupQrUrl: text('whatsapp_group_qr_url'),
+  registrationCountBoost: integer('registration_count_boost').notNull().default(0),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
 

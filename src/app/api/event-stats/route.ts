@@ -76,8 +76,10 @@ const DEFAULT_COORDINATORS = [
   },
 ];
 
+    const boost = (settings as any).registrationCountBoost || 0;
+
     const computedStats = {
-      totalRegistered: counts.total,
+      totalRegistered: counts.total + boost,
       totalCapacity: (settings as any).totalCapacity || 200,
       paymentsVerified: payStats.verified,
       paymentsPending: payStats.pending,

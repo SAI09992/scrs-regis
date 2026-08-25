@@ -107,7 +107,7 @@ export default function Step2Academic({ form }: Props) {
             className="w-full px-3.5 py-2.5 rounded-lg bg-cyber-surface border border-cyber-border text-cyber-text text-sm focus:outline-none focus:border-cyber-primary transition-colors"
           >
             <option value="">Select your year</option>
-            <option value="2nd Year">2nd Year</option>
+            <option value="2nd Year">2nd Year (CSE)</option>
             <option value="3rd Year">3rd Year</option>
             <option value="4th Year">4th Year</option>
           </select>
