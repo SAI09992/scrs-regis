@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Phone,
   Plus,
+  RotateCcw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageUploadField } from '@/components/admin/ImageUploadField';
@@ -84,6 +85,8 @@ export default function AdminSettingsPage() {
     registrationCountBoost: 0,
   });
 
+  const [realCount, setRealCount] = useState<number>(0);
+
   const fetchCoordinators = async () => {
     try {
       const res = await fetch('/api/admin/coordinators');
@@ -99,8 +102,17 @@ export default function AdminSettingsPage() {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch('/api/admin/settings');
-        const data = await res.json();
+        const [settingsRes, statsRes] = await Promise.all([
+          fetch('/api/admin/settings'),
+          fetch('/api/event-stats'),
+        ]);
+        const data = await settingsRes.json();
+        const statsData = await statsRes.json();
+
+        if (statsData.success && statsData.stats) {
+          setRealCount(statsData.stats.actualRegistered ?? statsData.stats.totalRegistered ?? 0);
+        }
+
         if (data.success && data.settings) {
           setSettings((prev) => ({
             ...prev,
@@ -538,23 +550,59 @@ export default function AdminSettingsPage() {
           </div>
 
           {/* Registration Count Boost */}
-          <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/40 space-y-3 mt-4">
-            <div className="flex items-center justify-between">
+          <div className="p-4 rounded-xl bg-amber-950/30 border border-amber-500/40 space-y-4 mt-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <label className="text-amber-400 block font-bold text-xs flex items-center gap-1.5">
-                  ⚡ DISPLAYED REGISTRATION COUNT BOOST
+                  ⚡ DISPLAYED REGISTRATION COUNT BOOST (URGENCY / FOMO)
                 </label>
                 <p className="text-[10px] text-cyber-text-dim mt-0.5">
-                  Adds a fake offset to the publicly shown registration count to create urgency. Real data is unaffected.
+                  Adds an artificial offset to the publicly shown count to reduce displayed available slots.
                 </p>
               </div>
-              <span className="text-xs font-bold text-amber-400 bg-amber-950/60 border border-amber-500/30 px-2.5 py-1 rounded-lg">
-                +{settings.registrationCountBoost}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-amber-400 bg-amber-950/60 border border-amber-500/30 px-2.5 py-1 rounded-lg">
+                  BOOST: +{settings.registrationCountBoost}
+                </span>
+                {settings.registrationCountBoost > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSettings((prev) => ({ ...prev, registrationCountBoost: 0 }))}
+                    className="px-2.5 py-1 rounded-lg bg-red-950/60 border border-red-500/40 text-red-300 hover:bg-red-900/60 font-bold text-[10px] flex items-center gap-1 transition-colors"
+                    title="Reset boost to 0"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>RESET TO 0</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Real vs Displayed Count Telemetry Breakdown */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 p-3 rounded-lg bg-cyber-bg/90 border border-cyber-border text-center text-xs">
+              <div className="p-2 rounded bg-cyber-surface/60 border border-cyber-border">
+                <span className="text-[10px] text-cyber-text-dim block font-bold">ORIGINAL REAL COUNT</span>
+                <span className="text-sm font-bold text-emerald-400">{realCount} Cadets</span>
+                <span className="text-[9px] text-cyber-text-muted block">Actual database records</span>
+              </div>
+              <div className="p-2 rounded bg-amber-950/40 border border-amber-500/30">
+                <span className="text-[10px] text-amber-300 block font-bold">ADDED BOOST OFFSET</span>
+                <span className="text-sm font-bold text-amber-400">+{settings.registrationCountBoost}</span>
+                <span className="text-[9px] text-amber-300/70 block">Fake extra count</span>
+              </div>
+              <div className="p-2 rounded bg-cyan-950/40 border border-cyan-500/30">
+                <span className="text-[10px] text-cyan-300 block font-bold">PUBLIC DISPLAYED TOTAL</span>
+                <span className="text-sm font-bold text-cyber-primary">
+                  {realCount + settings.registrationCountBoost} / {settings.totalCapacity}
+                </span>
+                <span className="text-[9px] text-cyan-300/70 block">
+                  {Math.max(0, settings.totalCapacity - (realCount + settings.registrationCountBoost))} slots left publicly
+                </span>
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[11px] text-cyber-text-dim mr-1">ADJUST BOOST:</span>
+              <span className="text-[11px] text-cyber-text-dim mr-1 font-bold">QUICK ADJUST BOOST:</span>
               {[-50, -10, -5].map((v) => (
                 <button
                   key={`boost${v}`}
@@ -579,7 +627,7 @@ export default function AdminSettingsPage() {
             </div>
 
             <div className="space-y-1">
-              <label className="text-cyber-text block font-bold text-[11px]">Exact Boost Value</label>
+              <label className="text-cyber-text block font-bold text-[11px]">Exact Boost Offset (Set 0 to show real count only)</label>
               <input
                 type="number"
                 min={0}

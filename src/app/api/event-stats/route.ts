@@ -80,6 +80,7 @@ const DEFAULT_COORDINATORS = [
 
     const computedStats = {
       totalRegistered: counts.total + boost,
+      actualRegistered: counts.total,
       totalCapacity: (settings as any).totalCapacity || 200,
       paymentsVerified: payStats.verified,
       paymentsPending: payStats.pending,
