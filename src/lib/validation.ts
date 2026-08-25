@@ -34,8 +34,8 @@ export const step2AcademicSchema = z.object({
     .max(30, 'Register number too long')
     .regex(/^[A-Za-z0-9\-_]+$/, 'Register number must contain only alphanumeric characters, dashes, or underscores'),
   department: z.string().min(2, 'Please select/enter your department'),
-  year: z.enum(['3rd Year', '4th Year'], {
-    errorMap: () => ({ message: 'Please select your year of study (3rd, or 4th)' }),
+  year: z.enum(['2nd Year', '3rd Year', '4th Year'], {
+    errorMap: () => ({ message: 'Please select your year of study (2nd, 3rd, or 4th)' }),
   }),
   section: z.string().min(1, 'Section is required (e.g. A, B, C, or N/A)'),
   college: z.string().min(3, 'Please enter your college/institution name'),
