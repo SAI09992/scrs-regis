@@ -301,11 +301,11 @@ export default function AdminDashboardPage() {
               <Link href="/admin/attendance" className="block">
                 <div className="p-4 rounded-xl bg-cyber-surface hover:bg-cyber-surface-elevated border border-cyber-secondary/40 hover:border-cyber-secondary transition-all space-y-1">
                   <div className="flex items-center justify-between text-cyber-secondary font-bold text-sm">
-                    <span>SCAN ATTENDANCE</span>
+                    <span>SNACKS & ATTENDANCE</span>
                     <QrCode className="w-4 h-4" />
                   </div>
                   <p className="text-[11px] text-cyber-text-muted">
-                    Launch QR scanner for Day 1 & Day 2
+                    QR Snacks distribution & manual attendance roster
                   </p>
                 </div>
               </Link>

@@ -24,7 +24,7 @@ const navItems = [
   { label: 'DASHBOARD', href: '/admin', icon: LayoutDashboard },
   { label: 'REGISTRATIONS', href: '/admin/registrations', icon: Users },
   { label: 'PAYMENT QUEUE', href: '/admin/payments', icon: CreditCard },
-  { label: 'ATTENDANCE', href: '/admin/attendance', icon: QrCode },
+  { label: 'SNACKS & ATTENDANCE', href: '/admin/attendance', icon: QrCode },
   { label: 'ANNOUNCEMENTS', href: '/admin/announcements', icon: Bell },
   { label: 'SCHEDULE', href: '/admin/schedule', icon: Calendar },
   { label: 'CERTIFICATES', href: '/admin/certificates', icon: Award },

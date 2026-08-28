@@ -139,6 +139,26 @@ export const attendance = pgTable(
   ]
 );
 
+// 5b. Snacks Distribution Table
+export const snacksDistribution = pgTable(
+  'snacks_distribution',
+  {
+    id: text('id').primaryKey(),
+    registrationId: text('registration_id')
+      .notNull()
+      .references(() => registrations.id, { onDelete: 'cascade' }),
+    slot: integer('slot').notNull().default(1),
+    slotName: text('slot_name').notNull().default('Snack Round 1'),
+    distributedAt: timestamp('distributed_at').notNull().defaultNow(),
+    scannedBy: text('scanned_by').references(() => users.id),
+  },
+  (table) => [
+    index('snacks_reg_id_idx').on(table.registrationId),
+    index('snacks_slot_idx').on(table.slot),
+    uniqueIndex('snacks_reg_slot_unique_idx').on(table.registrationId, table.slot),
+  ]
+);
+
 // 6. Announcements Table
 export const announcements = pgTable(
   'announcements',
