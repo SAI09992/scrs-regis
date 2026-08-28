@@ -2,21 +2,27 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
-import { Camera, CameraOff, RefreshCw, CheckCircle2, AlertTriangle, Video } from 'lucide-react';
+import { Camera, CameraOff, RefreshCw, CheckCircle2, AlertTriangle, Video, Scan } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CameraQrScannerProps {
   onScanSuccess: (decodedText: string) => void;
   activeDay: number;
+  autoStopOnScan?: boolean;
 }
 
-export function CameraQrScanner({ onScanSuccess, activeDay }: CameraQrScannerProps) {
+export function CameraQrScanner({
+  onScanSuccess,
+  activeDay,
+  autoStopOnScan = true,
+}: CameraQrScannerProps) {
   const [scanning, setScanning] = useState(false);
   const [cameras, setCameras] = useState<{ id: string; label: string }[]>([]);
   const [selectedCamera, setSelectedCamera] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
   const html5QrcodeRef = useRef<Html5Qrcode | null>(null);
+  const isStoppingRef = useRef<boolean>(false);
   const scannerContainerId = 'cyber-qr-reader';
 
   // Fetch available cameras on mount
@@ -27,7 +33,11 @@ export function CameraQrScanner({ onScanSuccess, activeDay }: CameraQrScannerPro
         if (devices && devices.length > 0) {
           setCameras(devices);
           // Prefer back camera if mobile, otherwise first available
-          const backCam = devices.find((d) => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment'));
+          const backCam = devices.find(
+            (d) =>
+              d.label.toLowerCase().includes('back') ||
+              d.label.toLowerCase().includes('environment')
+          );
           setSelectedCamera(backCam ? backCam.id : devices[0].id);
         } else {
           setError('No video cameras detected on this device.');
@@ -44,12 +54,16 @@ export function CameraQrScanner({ onScanSuccess, activeDay }: CameraQrScannerPro
   }, []);
 
   const stopScanner = async () => {
+    if (isStoppingRef.current) return;
     if (html5QrcodeRef.current && html5QrcodeRef.current.isScanning) {
+      isStoppingRef.current = true;
       try {
         await html5QrcodeRef.current.stop();
         html5QrcodeRef.current.clear();
       } catch (err) {
         console.warn('Scanner stop error:', err);
+      } finally {
+        isStoppingRef.current = false;
       }
     }
     setScanning(false);
@@ -78,16 +92,22 @@ export function CameraQrScanner({ onScanSuccess, activeDay }: CameraQrScannerPro
         cameraIdToUse,
         {
           fps: 15,
-          qrbox: { width: 220, height: 220 },
+          qrbox: { width: 240, height: 240 },
           aspectRatio: 1.0,
         },
-        (decodedText) => {
+        async (decodedText) => {
           let cleanId = decodedText.trim().toUpperCase();
           if (cleanId.startsWith('NGSOC-ATTENDANCE:')) {
             cleanId = cleanId.replace('NGSOC-ATTENDANCE:', '');
           }
 
-          toast.success(`✓ QR Code Scanned: ${cleanId}`);
+          toast.success(`✓ Scanned: ${cleanId}`);
+
+          // Immediately stop scanner after single scan if autoStopOnScan is enabled
+          if (autoStopOnScan) {
+            await stopScanner();
+          }
+
           onScanSuccess(cleanId);
         },
         () => {
@@ -104,9 +124,9 @@ export function CameraQrScanner({ onScanSuccess, activeDay }: CameraQrScannerPro
   return (
     <div className="space-y-4 font-mono text-xs">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-cyber-primary font-bold text-sm">
-          <Camera className="w-5 h-5 animate-pulse" />
-          <span>LIVE WEBRTC CAMERA SCANNER</span>
+        <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
+          <Camera className={`w-5 h-5 ${scanning ? 'animate-pulse text-amber-400' : 'text-cyber-text-muted'}`} />
+          <span>{scanning ? 'CAMERA SCANNING ACTIVE...' : 'CAMERA SCANNER READY'}</span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -131,41 +151,53 @@ export function CameraQrScanner({ onScanSuccess, activeDay }: CameraQrScannerPro
             <button
               type="button"
               onClick={stopScanner}
-              className="px-3 py-1.5 rounded-lg bg-red-950/60 border border-red-500/50 text-red-400 font-bold hover:bg-red-900/60 transition-colors flex items-center gap-1.5"
+              className="px-3.5 py-1.5 rounded-xl bg-red-950/60 border border-red-500/50 text-red-400 font-bold hover:bg-red-900/60 transition-colors flex items-center gap-1.5 shadow-sm"
             >
               <CameraOff className="w-4 h-4" />
-              <span>STOP CAMERA</span>
+              <span>CANCEL SCAN</span>
             </button>
           ) : (
             <button
               type="button"
               onClick={startScanner}
-              className="px-3 py-1.5 rounded-lg bg-cyber-primary/20 border border-cyber-primary/60 text-cyber-primary font-bold hover:bg-cyber-primary/30 transition-colors flex items-center gap-1.5 shadow-cyber-glow-sm"
+              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(245,158,11,0.35)]"
             >
-              <Video className="w-4 h-4" />
-              <span>START CAMERA SCANNER</span>
+              <Scan className="w-4 h-4" />
+              <span>SCAN QR CODE</span>
             </button>
           )}
         </div>
       </div>
 
       {/* Video Scanner Container */}
-      <div className="relative rounded-2xl bg-black border-2 border-cyber-border overflow-hidden min-h-[260px] flex items-center justify-center">
+      <div
+        onClick={() => {
+          if (!scanning) startScanner();
+        }}
+        className={`relative rounded-2xl bg-black border-2 transition-all duration-300 overflow-hidden min-h-[260px] flex items-center justify-center ${
+          scanning
+            ? 'border-amber-500 shadow-[0_0_25px_rgba(245,158,11,0.25)]'
+            : 'border-cyber-border hover:border-amber-500/60 cursor-pointer group bg-cyber-surface/20'
+        }`}
+      >
         {/* HTML5 QR Container */}
         <div id={scannerContainerId} className={`w-full ${!scanning ? 'hidden' : 'block'}`} />
 
         {!scanning && (
-          <div className="p-8 text-center space-y-3">
-            <div className="w-12 h-12 rounded-full bg-cyber-surface border border-cyber-border mx-auto flex items-center justify-center text-cyber-text-dim">
-              <Camera className="w-6 h-6" />
+          <div className="p-8 text-center space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 group-hover:scale-110 group-hover:border-amber-400 mx-auto flex items-center justify-center text-amber-400 transition-transform shadow-[0_0_20px_rgba(245,158,11,0.15)]">
+              <Scan className="w-8 h-8 animate-pulse" />
             </div>
             <div>
               <span className="text-cyber-text font-bold block text-sm">
-                WebRTC Camera Scanner Offline
+                Single-Shot QR Scanner (Click to Scan)
               </span>
-              <span className="text-cyber-text-dim text-[11px] block mt-1">
-                Click <strong className="text-cyber-primary">"START CAMERA SCANNER"</strong> above to enable live QR video check-in for Day {activeDay}.
+              <span className="text-cyber-text-muted text-[11px] block mt-1">
+                Click here or tap <strong className="text-amber-400">"SCAN QR CODE"</strong>. Camera will automatically turn off once QR is read!
               </span>
+            </div>
+            <div className="inline-block px-4 py-2 rounded-xl bg-amber-500/20 border border-amber-500/50 text-amber-400 font-bold text-xs group-hover:bg-amber-500 group-hover:text-black transition-colors">
+              + TAP TO SCAN NEXT CADET
             </div>
           </div>
         )}
