@@ -150,7 +150,7 @@ export const snacksDistribution = pgTable(
     slot: integer('slot').notNull().default(1),
     slotName: text('slot_name').notNull().default('Snack Round 1'),
     distributedAt: timestamp('distributed_at').notNull().defaultNow(),
-    scannedBy: text('scanned_by').references(() => users.id),
+    scannedBy: text('scanned_by'),
   },
   (table) => [
     index('snacks_reg_id_idx').on(table.registrationId),

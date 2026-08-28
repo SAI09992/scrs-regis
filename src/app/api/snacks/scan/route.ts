@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { snacksDistribution, registrations, payments } from '@/db/schema';
+import { snacksDistribution, registrations, payments, users } from '@/db/schema';
 import { requireAdmin } from '@/lib/auth';
 import { logAdminAction } from '@/lib/audit';
-import { and, eq, or } from 'drizzle-orm';
+import { and, eq, or, sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,6 +83,15 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. First time -> GIVE SNACKS!
+    // Resolve admin DB user safely if exists
+    const adminEmail = (admin.email || '').trim().toLowerCase();
+    const dbAdminList = await db
+      .select()
+      .from(users)
+      .where(or(eq(users.id, admin.id), sql`LOWER(${users.email}) = ${adminEmail}`))
+      .limit(1);
+    const dbAdminId = dbAdminList.length > 0 ? dbAdminList[0].id : (admin.email || null);
+
     const snackRecordId = `snk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     await db.insert(snacksDistribution).values({
       id: snackRecordId,
@@ -90,7 +99,7 @@ export async function POST(req: NextRequest) {
       slot: Number(slot),
       slotName,
       distributedAt: new Date(),
-      scannedBy: admin.id,
+      scannedBy: dbAdminId,
     });
 
     // 4. Audit Log
