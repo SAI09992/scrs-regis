@@ -19,7 +19,7 @@ export async function seedDatabase() {
       totalCapacity: 500,
       ueCapacity: 200,
       peopleCapacity: 300,
-      registrationOpen: true,
+      registrationOpen: false,
       paymentUpiId: 'nextgensoc.dept@upi',
       paymentQrUrl: '/assets/soc_upi_qr.png',
       contactPhone: '+91 98765 43210',

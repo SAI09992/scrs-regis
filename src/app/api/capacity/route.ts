@@ -11,6 +11,7 @@ export async function GET() {
     // 1. Get capacity settings
     const settings = (await db.select().from(eventSettings).limit(1))[0];
     const totalCapacity = settings?.totalCapacity || 500;
+    const registrationOpen = settings ? Boolean(settings.registrationOpen) : false;
 
     // 2. Get current confirmed or pending payments
     const totalPaymentsResult = await db
@@ -20,13 +21,14 @@ export async function GET() {
 
     const currentBooked = totalPaymentsResult[0].count;
     const remainingSpots = totalCapacity - currentBooked;
-    const isSoldOut = remainingSpots <= 0;
+    const isSoldOut = remainingSpots <= 0 || !registrationOpen;
 
     return NextResponse.json({
       success: true,
       totalCapacity,
       currentBooked,
       remainingSpots: Math.max(0, remainingSpots),
+      registrationOpen,
       isSoldOut,
     });
   } catch (err: any) {

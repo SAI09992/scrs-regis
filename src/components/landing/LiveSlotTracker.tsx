@@ -10,6 +10,7 @@ export default function LiveSlotTracker() {
     totalCapacity: 200,
     paymentsVerified: 0,
     paymentsPending: 0,
+    registrationOpen: true,
   });
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -25,6 +26,7 @@ export default function LiveSlotTracker() {
           totalCapacity: data.stats.totalCapacity || 200,
           paymentsVerified: data.stats.paymentsVerified || 0,
           paymentsPending: data.stats.paymentsPending || 0,
+          registrationOpen: data.stats.registrationOpen ?? true,
         });
         setLastUpdated(new Date());
       }
@@ -91,12 +93,12 @@ export default function LiveSlotTracker() {
                   </h3>
                   <span
                     className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                      stats.totalRegistered >= stats.totalCapacity
+                      !stats.registrationOpen || stats.totalRegistered >= stats.totalCapacity
                         ? 'bg-red-950/60 border border-red-500/40 text-red-400'
                         : 'bg-emerald-950/60 border border-emerald-500/40 text-emerald-400'
                     }`}
                   >
-                    {stats.totalRegistered >= stats.totalCapacity ? 'CLOSED' : 'OPEN'}
+                    {!stats.registrationOpen || stats.totalRegistered >= stats.totalCapacity ? 'CLOSED' : 'OPEN'}
                   </span>
                 </div>
               </div>

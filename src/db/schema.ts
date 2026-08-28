@@ -237,7 +237,7 @@ export const eventSettings = pgTable('event_settings', {
   totalCapacity: integer('total_capacity').notNull().default(500),
   ueCapacity: integer('ue_capacity').notNull().default(200),
   peopleCapacity: integer('people_capacity').notNull().default(300),
-  registrationOpen: boolean('registration_open').notNull().default(true),
+  registrationOpen: boolean('registration_open').notNull().default(false),
   paymentUpiId: text('payment_upi_id').notNull().default('nextgensoc.dept@upi'),
   paymentQrUrl: text('payment_qr_url'),
   contactPhone: text('contact_phone').notNull().default('+91 98765 43210'),

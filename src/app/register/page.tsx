@@ -64,7 +64,17 @@ function RegisterContent() {
 
   useEffect(() => {
     if (status === 'unauthenticated') {
-      setCheckingRegistration(false);
+      fetch('/api/capacity')
+        .then(res => res.json())
+        .then(capacityData => {
+          if (capacityData.success && capacityData.isSoldOut) {
+            setIsSoldOut(true);
+          }
+        })
+        .catch(console.error)
+        .finally(() => {
+          setCheckingRegistration(false);
+        });
       return;
     }
 
@@ -284,10 +294,10 @@ function RegisterContent() {
           </div>
           <div>
             <h2 className="text-xl font-bold font-mono text-rose-400">
-              BOOTCAMP SOLD OUT
+              REGISTRATIONS CLOSED
             </h2>
             <p className="text-xs font-mono text-cyber-text-muted mt-2 leading-relaxed">
-              We have officially reached maximum capacity. All available slots for NEXTGEN SOC Bootcamp are currently booked.
+              Registration time has completed. Admissions for NEXTGEN SOC Bootcamp are officially closed.
             </p>
           </div>
           <div className="pt-2">
