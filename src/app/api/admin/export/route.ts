@@ -85,6 +85,7 @@ export async function GET(req: NextRequest) {
           id: registrations.id,
           registrationId: registrations.registrationId,
           name: registrations.name,
+          email: registrations.email,
           registerNumber: registrations.registerNumber,
           department: registrations.department,
           year: registrations.year,
@@ -93,6 +94,15 @@ export async function GET(req: NextRequest) {
         })
         .from(registrations)
         .leftJoin(payments, eq(registrations.id, payments.registrationId));
+
+      // Helper to guarantee 11-digit KLU registration number
+      const getKluRegNo = (regNo: string, email: string) => {
+        const prefix = (email || '').split('@')[0].trim();
+        if (prefix.startsWith('99') && /^\d+$/.test(prefix)) {
+          return prefix;
+        }
+        return regNo;
+      };
 
       // Fetch present attendance records
       const presentRecords = await db
@@ -115,14 +125,14 @@ export async function GET(req: NextRequest) {
           .filter((c) => !presentDay1Set.has(c.id))
           .map((c) => ({
             'Student Name': c.name,
-            'Registration Number': c.registerNumber,
+            'Registration Number': getKluRegNo(c.registerNumber, c.email),
           }));
       } else if (dayParam === '2') {
         absenteeRows = allCadets
           .filter((c) => !presentDay2Set.has(c.id))
           .map((c) => ({
             'Student Name': c.name,
-            'Registration Number': c.registerNumber,
+            'Registration Number': getKluRegNo(c.registerNumber, c.email),
           }));
       } else {
         absenteeRows = allCadets
@@ -133,7 +143,7 @@ export async function GET(req: NextRequest) {
             if (!presentDay2Set.has(c.id)) absentOn.push('Day 2');
             return {
               'Student Name': c.name,
-              'Registration Number': c.registerNumber,
+              'Registration Number': getKluRegNo(c.registerNumber, c.email),
               'Absent Days': absentOn.join(', '),
             };
           });

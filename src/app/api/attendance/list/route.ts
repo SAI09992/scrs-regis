@@ -48,8 +48,17 @@ export async function GET() {
       }
     });
 
+    const getKluRegNo = (regNo: string, email: string) => {
+      const prefix = (email || '').split('@')[0].trim();
+      if (prefix.startsWith('99') && /^\d+$/.test(prefix)) {
+        return prefix;
+      }
+      return regNo;
+    };
+
     const combinedList = regList.map((r) => ({
       ...r,
+      registerNumber: getKluRegNo(r.registerNumber, r.email),
       day1Present: attendanceMap[r.id]?.day1 || false,
       day2Present: attendanceMap[r.id]?.day2 || false,
     }));
