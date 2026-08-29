@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { attendance, registrations, payments } from '@/db/schema';
+import { attendance, registrations, payments, users } from '@/db/schema';
 import { attendanceScanSchema } from '@/lib/validation';
 import { requireAdmin } from '@/lib/auth';
 import { logAdminAction } from '@/lib/audit';
 import { broadcastRealtimeEvent } from '@/lib/realtime';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, or, sql } from 'drizzle-orm';
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,6 +69,14 @@ export async function POST(req: NextRequest) {
     }
 
     // 3. Record Attendance
+    const adminEmail = (admin.email || '').trim().toLowerCase();
+    const dbAdminList = await db
+      .select()
+      .from(users)
+      .where(or(eq(users.id, admin.id), sql`LOWER(${users.email}) = ${adminEmail}`))
+      .limit(1);
+    const dbAdminId = dbAdminList.length > 0 ? dbAdminList[0].id : (admin.email || null);
+
     const attId = `att_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     await db.insert(attendance).values({
       id: attId,
@@ -77,7 +85,7 @@ export async function POST(req: NextRequest) {
       session,
       status: 'present',
       timestamp: new Date(),
-      markedBy: admin.id,
+      markedBy: dbAdminId,
       method: 'qr_scan',
     });
 

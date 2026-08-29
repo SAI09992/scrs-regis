@@ -130,7 +130,7 @@ export const attendance = pgTable(
     session: text('session').notNull().default('morning'),
     status: text('status', { enum: ['present', 'absent'] }).notNull().default('present'),
     timestamp: timestamp('timestamp').notNull().defaultNow(),
-    markedBy: text('marked_by').references(() => users.id),
+    markedBy: text('marked_by'),
     method: text('method', { enum: ['qr_scan', 'manual_override'] }).notNull().default('qr_scan'),
   },
   (table) => [

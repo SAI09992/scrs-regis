@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
-import { attendance, registrations } from '@/db/schema';
+import { attendance, registrations, users } from '@/db/schema';
 import { requireAdmin } from '@/lib/auth';
 import { logAdminAction } from '@/lib/audit';
 import { broadcastRealtimeEvent } from '@/lib/realtime';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, or, sql } from 'drizzle-orm';
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,6 +27,15 @@ export async function POST(req: NextRequest) {
 
     const reg = regList[0];
 
+    // Resolve admin DB user safely if exists
+    const adminEmail = (admin.email || '').trim().toLowerCase();
+    const dbAdminList = await db
+      .select()
+      .from(users)
+      .where(or(eq(users.id, admin.id), sql`LOWER(${users.email}) = ${adminEmail}`))
+      .limit(1);
+    const dbAdminId = dbAdminList.length > 0 ? dbAdminList[0].id : (admin.email || null);
+
     // Check if record exists
     const existing = await db
       .select()
@@ -45,7 +54,7 @@ export async function POST(req: NextRequest) {
         .update(attendance)
         .set({
           status: status || 'present',
-          markedBy: admin.id,
+          markedBy: dbAdminId,
           timestamp: new Date(),
           method: 'manual_override',
         })
@@ -58,7 +67,7 @@ export async function POST(req: NextRequest) {
         session: session || 'morning',
         status: status || 'present',
         timestamp: new Date(),
-        markedBy: admin.id,
+        markedBy: dbAdminId,
         method: 'manual_override',
       });
     }
