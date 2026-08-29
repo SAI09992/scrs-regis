@@ -167,6 +167,11 @@ export default function AdminSettingsPage() {
       }
     } catch (e) {
       toast.error('Network save error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const [togglingReg, setTogglingReg] = useState(false);
 
   const handleToggleRegistration = async () => {
