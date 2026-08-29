@@ -167,8 +167,44 @@ export default function AdminSettingsPage() {
       }
     } catch (e) {
       toast.error('Network save error');
+  const [togglingReg, setTogglingReg] = useState(false);
+
+  const handleToggleRegistration = async () => {
+    const nextState = !settings.registrationOpen;
+    setTogglingReg(true);
+    // Optimistic UI update
+    setSettings((prev) => ({ ...prev, registrationOpen: nextState }));
+
+    try {
+      const payload = {
+        ...settings,
+        registrationOpen: nextState,
+        coordinators: landingCoordinators,
+      };
+
+      const res = await fetch('/api/admin/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success(
+          nextState
+            ? '🟢 Registrations are now OPEN in live database!'
+            : '🔴 Registrations are now CLOSED in live database!'
+        );
+      } else {
+        toast.error(data.error || 'Failed to update registration status');
+        // Revert on error
+        setSettings((prev) => ({ ...prev, registrationOpen: !nextState }));
+      }
+    } catch (e) {
+      toast.error('Network error updating registration status');
+      setSettings((prev) => ({ ...prev, registrationOpen: !nextState }));
     } finally {
-      setSaving(false);
+      setTogglingReg(false);
     }
   };
 
@@ -465,16 +501,16 @@ export default function AdminSettingsPage() {
 
           <button
             type="button"
-            onClick={() =>
-              setSettings((prev) => ({ ...prev, registrationOpen: !prev.registrationOpen }))
-            }
-            className={`px-5 py-2.5 rounded-xl font-bold transition-all ${
+            onClick={handleToggleRegistration}
+            disabled={togglingReg}
+            className={`px-5 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 ${
               settings.registrationOpen
-                ? 'bg-emerald-500 text-black shadow-cyber-glow-emerald'
-                : 'bg-red-500/20 border border-red-500 text-red-400'
-            }`}
+                ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-cyber-glow-emerald'
+                : 'bg-red-950/60 hover:bg-red-900/60 border border-red-500 text-red-400'
+            } ${togglingReg ? 'opacity-60 cursor-not-allowed' : ''}`}
           >
-            {settings.registrationOpen ? 'REGISTRATION OPEN' : 'REGISTRATION CLOSED'}
+            {togglingReg && <Loader2 className="w-4 h-4 animate-spin" />}
+            <span>{settings.registrationOpen ? 'REGISTRATION OPEN (CLICK TO CLOSE)' : 'REGISTRATION CLOSED (CLICK TO OPEN)'}</span>
           </button>
         </div>
 
