@@ -3,7 +3,7 @@ import { db } from '@/db';
 import { users } from '@/db/schema';
 import { requireAdmin } from '@/lib/auth';
 import { logAdminAction } from '@/lib/audit';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     const existing = await db
       .select()
       .from(users)
-      .where(eq(users.email, cleanEmail))
+      .where(sql`LOWER(${users.email}) = ${cleanEmail}`)
       .limit(1);
 
     if (existing.length === 0) {
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       await db
         .update(users)
         .set({ role: 'admin' })
-        .where(eq(users.email, cleanEmail));
+        .where(eq(users.id, existing[0].id));
     }
 
     await logAdminAction({
