@@ -22,6 +22,8 @@ import {
   ShieldCheck,
   AlertCircle,
   Filter,
+  Download,
+  FileSpreadsheet,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -114,6 +116,11 @@ export default function AdminAttendanceAndSnacksPage() {
     } finally {
       setAttendanceLoading(false);
     }
+  };
+
+  const handleExportAbsentees = (day: '1' | '2' | 'all') => {
+    window.location.href = `/api/admin/export?type=absentees&day=${day}`;
+    toast.success(`Generating Day ${day === 'all' ? '1 & 2' : day} Absentees Excel file...`);
   };
 
   useEffect(() => {
@@ -671,6 +678,55 @@ export default function AdminAttendanceAndSnacksPage() {
               <option value="PRESENT">Day 2: Present Only</option>
               <option value="ABSENT">Day 2: Absent Only</option>
             </select>
+          </div>
+
+          {/* Absentees Export & Quick Actions Bar */}
+          <div className="p-4 rounded-2xl cyber-glass border border-cyber-border flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-2.5 text-cyber-text">
+              <div className="p-2 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-400">
+                <FileSpreadsheet className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-bold text-xs text-cyber-text">EXPORT ABSENTEES REPORT (EXCEL)</div>
+                <div className="text-[10px] text-cyber-text-dim">
+                  Exports .xlsx with Student Name and 11-digit University Registration Number (Roll No)
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+              <button
+                onClick={() => handleExportAbsentees('1')}
+                className="px-3.5 py-2 rounded-xl bg-cyber-surface hover:bg-cyber-surface-elevated border border-amber-500/50 text-amber-400 font-bold transition-all flex items-center gap-2 text-xs shadow-sm hover:border-amber-400"
+              >
+                <Download className="w-4 h-4" />
+                <span>DAY 1 ABSENTEES</span>
+              </button>
+
+              <button
+                onClick={() => handleExportAbsentees('2')}
+                className="px-3.5 py-2 rounded-xl bg-cyber-surface hover:bg-cyber-surface-elevated border border-amber-500/50 text-amber-400 font-bold transition-all flex items-center gap-2 text-xs shadow-sm hover:border-amber-400"
+              >
+                <Download className="w-4 h-4" />
+                <span>DAY 2 ABSENTEES</span>
+              </button>
+
+              <button
+                onClick={() => handleExportAbsentees('all')}
+                className="px-3.5 py-2 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/50 text-emerald-400 font-bold transition-all flex items-center gap-2 text-xs shadow-sm"
+              >
+                <Download className="w-4 h-4" />
+                <span>ALL ABSENTEES</span>
+              </button>
+
+              <button
+                onClick={fetchAttendanceRoster}
+                className="p-2 rounded-xl bg-cyber-surface border border-cyber-border text-cyber-text-muted hover:text-cyber-primary transition-colors"
+                title="Refresh Roster"
+              >
+                <RefreshCw className={`w-4 h-4 ${attendanceLoading ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
           </div>
 
           {/* Roster Counters */}

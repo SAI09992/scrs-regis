@@ -76,6 +76,83 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    if (type === 'absentees') {
+      const dayParam = searchParams.get('day') || '1'; // '1', '2', or 'all'
+
+      // Fetch all registered cadets
+      const allCadets = await db
+        .select({
+          id: registrations.id,
+          registrationId: registrations.registrationId,
+          name: registrations.name,
+          registerNumber: registrations.registerNumber,
+          department: registrations.department,
+          year: registrations.year,
+          section: registrations.section,
+          paymentStatus: payments.status,
+        })
+        .from(registrations)
+        .leftJoin(payments, eq(registrations.id, payments.registrationId));
+
+      // Fetch present attendance records
+      const presentRecords = await db
+        .select()
+        .from(attendance)
+        .where(eq(attendance.status, 'present'));
+
+      const presentDay1Set = new Set<string>();
+      const presentDay2Set = new Set<string>();
+
+      presentRecords.forEach((att) => {
+        if (att.day === 1) presentDay1Set.add(att.registrationId);
+        if (att.day === 2) presentDay2Set.add(att.registrationId);
+      });
+
+      let absenteeRows: any[] = [];
+
+      if (dayParam === '1') {
+        absenteeRows = allCadets
+          .filter((c) => !presentDay1Set.has(c.id))
+          .map((c) => ({
+            'Student Name': c.name,
+            'Registration Number': c.registerNumber,
+          }));
+      } else if (dayParam === '2') {
+        absenteeRows = allCadets
+          .filter((c) => !presentDay2Set.has(c.id))
+          .map((c) => ({
+            'Student Name': c.name,
+            'Registration Number': c.registerNumber,
+          }));
+      } else {
+        absenteeRows = allCadets
+          .filter((c) => !presentDay1Set.has(c.id) || !presentDay2Set.has(c.id))
+          .map((c) => {
+            const absentOn = [];
+            if (!presentDay1Set.has(c.id)) absentOn.push('Day 1');
+            if (!presentDay2Set.has(c.id)) absentOn.push('Day 2');
+            return {
+              'Student Name': c.name,
+              'Registration Number': c.registerNumber,
+              'Absent Days': absentOn.join(', '),
+            };
+          });
+      }
+
+      const worksheet = XLSX.utils.json_to_sheet(absenteeRows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, `Absentees_Day_${dayParam}`);
+
+      const buf = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      return new Response(buf, {
+        headers: {
+          'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Disposition': `attachment; filename="nextgen-soc-absentees-day${dayParam}-${Date.now()}.xlsx"`,
+        },
+      });
+    }
+
     return NextResponse.json({ success: false, error: 'Invalid export type' }, { status: 400 });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err?.message }, { status: 500 });
