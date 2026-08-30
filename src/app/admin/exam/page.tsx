@@ -76,8 +76,8 @@ export default function AdminExamPage() {
     }
   };
 
-  const handleUnblock = async (attemptId: string) => {
-    if (!confirm('Unblock this user? Their attempt will be completely reset.')) return;
+  const handleReset = async (attemptId: string) => {
+    if (!confirm('Are you sure you want to completely reset this attempt? This will delete their score and allow them to retake the exam.')) return;
     setUnblocking(attemptId);
     try {
       const res = await fetch('/api/admin/exam-attempts', {
@@ -87,10 +87,10 @@ export default function AdminExamPage() {
       });
       const data = await res.json();
       if (data.success) {
-        toast.success(data.message);
+        toast.success('Attempt successfully reset!');
         fetchAttempts(); // Refresh list
       } else {
-        toast.error(data.error || 'Failed to unblock');
+        toast.error(data.error || 'Failed to reset attempt');
       }
     } catch (e) {
       toast.error('Network error');
@@ -414,14 +414,18 @@ export default function AdminExamPage() {
                         </div>
                       </td>
                       <td className="p-4 text-right">
-                        {attempt.status === 'terminated' ? (
+                        {attempt.status === 'terminated' || attempt.status === 'completed' ? (
                           <button
-                            onClick={() => handleUnblock(attempt.id)}
+                            onClick={() => handleReset(attempt.id)}
                             disabled={unblocking === attempt.id}
-                            className="px-3 py-1.5 rounded-lg bg-red-950/40 text-red-400 border border-red-500/30 hover:bg-red-950 hover:text-red-300 transition-colors font-bold text-[10px] flex items-center gap-2 ml-auto"
+                            className={`px-3 py-1.5 rounded-lg border transition-colors font-bold text-[10px] flex items-center gap-2 ml-auto ${
+                              attempt.status === 'terminated' 
+                                ? 'bg-red-950/40 text-red-400 border-red-500/30 hover:bg-red-950 hover:text-red-300' 
+                                : 'bg-amber-950/40 text-amber-400 border-amber-500/30 hover:bg-amber-950 hover:text-amber-300'
+                            }`}
                           >
                             {unblocking === attempt.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldAlert className="w-3.5 h-3.5" />}
-                            UNBLOCK USER
+                            {attempt.status === 'terminated' ? 'UNBLOCK USER' : 'RESET RETAKE'}
                           </button>
                         ) : (
                           <span className="text-[10px] text-cyber-text-muted">No Action</span>
