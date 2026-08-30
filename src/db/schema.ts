@@ -323,6 +323,55 @@ export const problemStatements = pgTable(
   ]
 );
 
+// 14. Exam Settings Table
+export const examSettings = pgTable('exam_settings', {
+  id: text('id').primaryKey(),
+  warningLimit: integer('warning_limit').notNull().default(3),
+  durationMinutes: integer('duration_minutes').notNull().default(25),
+  examActive: boolean('exam_active').notNull().default(false),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
+// 15. Exam Questions Table
+export const examQuestions = pgTable(
+  'exam_questions',
+  {
+    id: text('id').primaryKey(),
+    questionText: text('question_text').notNull(),
+    options: jsonb('options').notNull(),
+    correctOptionIndex: integer('correct_option_index').notNull(),
+    orderIndex: integer('order_index').notNull().default(0),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('exam_questions_order_idx').on(table.orderIndex),
+  ]
+);
+
+// 16. Exam Attempts Table
+export const examAttempts = pgTable(
+  'exam_attempts',
+  {
+    id: text('id').primaryKey(),
+    registrationId: text('registration_id')
+      .notNull()
+      .references(() => registrations.id, { onDelete: 'cascade' }),
+    status: text('status', { enum: ['not_started', 'in_progress', 'completed', 'terminated'] })
+      .notNull()
+      .default('not_started'),
+    score: integer('score'),
+    warningsCount: integer('warnings_count').notNull().default(0),
+    violationLogs: jsonb('violation_logs').default([]),
+    answers: jsonb('answers').default({}),
+    startedAt: timestamp('started_at'),
+    endedAt: timestamp('ended_at'),
+  },
+  (table) => [
+    uniqueIndex('exam_attempts_reg_id_idx').on(table.registrationId),
+    index('exam_attempts_status_idx').on(table.status),
+  ]
+);
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   registration: one(registrations, {
@@ -347,6 +396,10 @@ export const registrationsRelations = relations(registrations, ({ one, many }) =
   certificate: one(certificates, {
     fields: [registrations.id],
     references: [certificates.registrationId],
+  }),
+  examAttempt: one(examAttempts, {
+    fields: [registrations.id],
+    references: [examAttempts.registrationId],
   }),
 }));
 
@@ -398,6 +451,13 @@ export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
   }),
   registration: one(registrations, {
     fields: [teamMembers.registrationId],
+    references: [registrations.id],
+  }),
+}));
+
+export const examAttemptsRelations = relations(examAttempts, ({ one }) => ({
+  registration: one(registrations, {
+    fields: [examAttempts.registrationId],
     references: [registrations.id],
   }),
 }));

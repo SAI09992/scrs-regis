@@ -27,6 +27,7 @@ const navItems = [
   { label: 'PAYMENT QUEUE', href: '/admin/payments', icon: CreditCard },
   { label: 'SNACKS & ATTENDANCE', href: '/admin/attendance', icon: QrCode },
   { label: 'TEAMS & PS', href: '/admin/teams', icon: UsersRound },
+  { label: 'EXAM PORTAL', href: '/admin/exam', icon: Shield },
   { label: 'ANNOUNCEMENTS', href: '/admin/announcements', icon: Bell },
   { label: 'SCHEDULE', href: '/admin/schedule', icon: Calendar },
   { label: 'CERTIFICATES', href: '/admin/certificates', icon: Award },

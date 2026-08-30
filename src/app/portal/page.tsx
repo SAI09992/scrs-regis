@@ -167,6 +167,9 @@ export default function ParticipantPortalPage() {
 
         {/* Team Portal Section */}
         <TeamPortalCard />
+        
+        {/* Exam Portal Section */}
+        <ExamPortalCard />
 
         {/* Certificate Unlock Banner */}
         {isEligibleForCert && (
@@ -505,6 +508,79 @@ function TeamPortalCard() {
       {!ps && !isLead && (
         <div className="p-4 rounded-xl bg-cyber-surface/50 border border-cyber-border text-center text-xs text-cyber-text-muted font-mono">
           ⏳ Your team lead will select the problem statement.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ExamPortalCard() {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/api/portal/exam/status')
+      .then(res => res.json())
+      .then(d => { if (d.success) setData(d); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return null;
+  if (!data?.examActive) return null;
+
+  const attempt = data.attempt;
+
+  return (
+    <div className="p-6 rounded-2xl cyber-glass border border-cyan-500/40 bg-cyan-950/10 space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-xl bg-cyan-950/60 border border-cyan-500 text-cyan-400 flex items-center justify-center shrink-0">
+          <ShieldCheck className="w-6 h-6" />
+        </div>
+        <div>
+          <h3 className="text-base font-bold font-mono text-cyan-400">
+            SECURE EXAM PORTAL
+          </h3>
+          <p className="text-[11px] text-cyber-text-muted mt-0.5">
+            The mandatory technical assessment is now active.
+          </p>
+        </div>
+      </div>
+      
+      {!attempt || attempt.status === 'not_started' ? (
+        <div className="pt-2">
+          <p className="text-xs text-cyber-text font-mono mb-4">
+            You have not started your exam yet. Ensure you are in a quiet environment before proceeding.
+          </p>
+          <Link href="/portal/exam">
+            <CyberButton variant="primary" glow size="md" className="gap-2 bg-cyan-600 hover:bg-cyan-500 text-white">
+              <ShieldCheck className="w-4 h-4" />
+              <span>START SECURE EXAM</span>
+            </CyberButton>
+          </Link>
+        </div>
+      ) : attempt.status === 'completed' ? (
+        <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-center">
+          <div className="text-emerald-400 font-bold font-mono text-sm">EXAM COMPLETED</div>
+          <div className="text-xs text-cyber-text-dim mt-1 font-mono">Your responses have been recorded successfully.</div>
+        </div>
+      ) : attempt.status === 'terminated' ? (
+        <div className="p-4 rounded-xl bg-red-950/20 border border-red-500/30 text-center">
+          <div className="text-red-400 font-bold font-mono text-sm">EXAM TERMINATED</div>
+          <div className="text-xs text-cyber-text-dim mt-1 font-mono">Your exam was blocked due to multiple anti-cheat violations.</div>
+        </div>
+      ) : (
+        <div className="pt-2">
+          <div className="p-4 rounded-xl bg-amber-950/20 border border-amber-500/30 text-center mb-4">
+            <div className="text-amber-400 font-bold font-mono text-sm">EXAM IN PROGRESS</div>
+            <div className="text-xs text-cyber-text-dim mt-1 font-mono">You left the exam before submitting! Return immediately.</div>
+          </div>
+          <Link href="/portal/exam">
+            <CyberButton variant="primary" glow size="md" className="gap-2 bg-amber-600 hover:bg-amber-500 text-white w-full">
+              <ShieldCheck className="w-4 h-4" />
+              <span>RESUME EXAM</span>
+            </CyberButton>
+          </Link>
         </div>
       )}
     </div>
