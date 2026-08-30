@@ -267,8 +267,61 @@ export const eventSettings = pgTable('event_settings', {
   whatsappGroupLink: text('whatsapp_group_link'),
   whatsappGroupQrUrl: text('whatsapp_group_qr_url'),
   registrationCountBoost: integer('registration_count_boost').notNull().default(0),
+  teamPortalVisible: boolean('team_portal_visible').notNull().default(false),
+  psSelectionVisible: boolean('ps_selection_visible').notNull().default(false),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
+
+// 11. Teams Table
+export const teams = pgTable(
+  'teams',
+  {
+    id: text('id').primaryKey(),
+    teamName: text('team_name').notNull().default(''),
+    teamLeadRegistrationId: text('team_lead_registration_id'),
+    problemStatementId: text('problem_statement_id'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('teams_name_idx').on(table.teamName),
+  ]
+);
+
+// 12. Team Members Table
+export const teamMembers = pgTable(
+  'team_members',
+  {
+    id: text('id').primaryKey(),
+    teamId: text('team_id')
+      .notNull()
+      .references(() => teams.id, { onDelete: 'cascade' }),
+    registrationId: text('registration_id')
+      .notNull()
+      .unique()
+      .references(() => registrations.id, { onDelete: 'cascade' }),
+    joinedAt: timestamp('joined_at').notNull().defaultNow(),
+  },
+  (table) => [
+    index('team_members_team_id_idx').on(table.teamId),
+    uniqueIndex('team_members_reg_id_idx').on(table.registrationId),
+  ]
+);
+
+// 13. Problem Statements Table
+export const problemStatements = pgTable(
+  'problem_statements',
+  {
+    id: text('id').primaryKey(),
+    slotNumber: integer('slot_number').notNull(),
+    title: text('title').notNull(),
+    documentUrl: text('document_url'),
+    maxTeams: integer('max_teams').notNull().default(7),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('ps_slot_number_idx').on(table.slotNumber),
+  ]
+);
 
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -326,6 +379,25 @@ export const attendanceRelations = relations(attendance, ({ one }) => ({
 export const certificatesRelations = relations(certificates, ({ one }) => ({
   registration: one(registrations, {
     fields: [certificates.registrationId],
+    references: [registrations.id],
+  }),
+}));
+
+export const teamsRelations = relations(teams, ({ many, one }) => ({
+  members: many(teamMembers),
+  problemStatement: one(problemStatements, {
+    fields: [teams.problemStatementId],
+    references: [problemStatements.id],
+  }),
+}));
+
+export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
+  team: one(teams, {
+    fields: [teamMembers.teamId],
+    references: [teams.id],
+  }),
+  registration: one(registrations, {
+    fields: [teamMembers.registrationId],
     references: [registrations.id],
   }),
 }));

@@ -17,6 +17,7 @@ import {
   ShieldAlert,
   LogOut,
   Shield,
+  UsersRound,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/ui/BrandLogo';
 
@@ -25,6 +26,7 @@ const navItems = [
   { label: 'REGISTRATIONS', href: '/admin/registrations', icon: Users },
   { label: 'PAYMENT QUEUE', href: '/admin/payments', icon: CreditCard },
   { label: 'SNACKS & ATTENDANCE', href: '/admin/attendance', icon: QrCode },
+  { label: 'TEAMS & PS', href: '/admin/teams', icon: UsersRound },
   { label: 'ANNOUNCEMENTS', href: '/admin/announcements', icon: Bell },
   { label: 'SCHEDULE', href: '/admin/schedule', icon: Calendar },
   { label: 'CERTIFICATES', href: '/admin/certificates', icon: Award },

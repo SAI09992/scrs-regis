@@ -165,6 +165,9 @@ export default function ParticipantPortalPage() {
           />
         </div>
 
+        {/* Team Portal Section */}
+        <TeamPortalCard />
+
         {/* Certificate Unlock Banner */}
         {isEligibleForCert && (
           <div className="p-6 rounded-2xl cyber-glass border border-emerald-500/50 bg-emerald-950/10 shadow-cyber-glow-emerald flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs">
@@ -264,6 +267,246 @@ function WhatsAppJoinCard() {
           </a>
         </div>
       </div>
+    </div>
+  );
+}
+
+function TeamPortalCard() {
+  const [loading, setLoading] = useState(true);
+  const [teamData, setTeamData] = useState<any>(null);
+  const [rolling, setRolling] = useState(false);
+  const [diceNumber, setDiceNumber] = useState<number | null>(null);
+  const [diceAnimating, setDiceAnimating] = useState(false);
+  const [rolledPS, setRolledPS] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/api/portal/team')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.success) setTeamData(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleRollDice = async () => {
+    setRolling(true);
+    setDiceAnimating(true);
+
+    // Animate dice numbers rapidly for 2.5 seconds
+    const interval = setInterval(() => {
+      setDiceNumber(Math.floor(Math.random() * 5) + 1);
+    }, 100);
+
+    try {
+      const res = await fetch('/api/portal/team/roll-dice', { method: 'POST' });
+      const data = await res.json();
+
+      // Wait for animation to complete
+      await new Promise((r) => setTimeout(r, 2500));
+      clearInterval(interval);
+
+      if (data.success) {
+        setDiceNumber(data.rolledNumber);
+        setRolledPS(data.problemStatement);
+        setDiceAnimating(false);
+
+        // Confetti!
+        if (typeof window !== 'undefined') {
+          import('canvas-confetti').then((m) =>
+            m.default({
+              particleCount: 120,
+              spread: 80,
+              origin: { y: 0.6 },
+              colors: ['#8B5CF6', '#A78BFA', '#C4B5FD', '#00E5FF', '#10B981'],
+            })
+          );
+        }
+
+        // Refresh team data
+        setTimeout(() => {
+          fetch('/api/portal/team')
+            .then((r) => r.json())
+            .then((d) => { if (d.success) setTeamData(d); });
+        }, 1000);
+
+        toast.success(`🎲 You got Problem Statement #${data.rolledNumber}: ${data.problemStatement.title}`);
+      } else {
+        clearInterval(interval);
+        setDiceAnimating(false);
+        setDiceNumber(null);
+        toast.error(data.error || 'Failed to roll');
+      }
+    } catch (e) {
+      clearInterval(interval);
+      setDiceAnimating(false);
+      setDiceNumber(null);
+      toast.error('Network error');
+    } finally {
+      setRolling(false);
+    }
+  };
+
+  if (loading) return null;
+  if (!teamData) return null;
+  if (!teamData.teamPortalVisible) return null;
+
+  const team = teamData.team;
+
+  if (!team) {
+    return (
+      <div className="p-6 rounded-2xl cyber-glass border border-amber-500/40 bg-amber-950/10 font-mono text-xs text-center">
+        <div className="text-amber-400 font-bold text-sm mb-2">⚠ NO TEAM ASSIGNED</div>
+        <p className="text-cyber-text-muted">
+          You have not been assigned to a team yet. Please contact the organizers.
+        </p>
+      </div>
+    );
+  }
+
+  const ps = team.problemStatement;
+  const isLead = teamData.isTeamLead;
+  const psSelectionVisible = teamData.psSelectionVisible;
+
+  return (
+    <div className="p-6 rounded-2xl cyber-glass border border-violet-500/40 bg-violet-950/10 space-y-5">
+      {/* Team Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-violet-950/60 border border-violet-500 text-violet-400 flex items-center justify-center shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 21a8 8 0 0 0-16 0"/><circle cx="10" cy="8" r="5"/><path d="M22 20c0-3.37-2-6.5-4-8a5 5 0 0 0-.45-8.3"/></svg>
+          </div>
+          <div>
+            <h3 className="text-base font-bold font-mono text-cyber-text">
+              {team.teamName || 'YOUR TEAM'}
+            </h3>
+            <p className="text-[11px] text-cyber-text-dim font-mono">
+              {team.memberCount} Members {isLead && <span className="text-amber-400">★ You are Team Lead</span>}
+            </p>
+          </div>
+        </div>
+        {ps && (
+          <div className="px-3 py-1.5 rounded-xl bg-violet-500/20 border border-violet-500/30 text-violet-400 text-[10px] font-bold font-mono">
+            PS #{ps.slotNumber}
+          </div>
+        )}
+      </div>
+
+      {/* Members List */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        {team.members.map((m: any) => {
+          const isMemberLead = m.registrationId === team.teamLeadRegistrationId;
+          return (
+            <div
+              key={m.id}
+              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-mono ${
+                isMemberLead
+                  ? 'bg-amber-500/10 border border-amber-500/30'
+                  : 'bg-cyber-surface/50 border border-cyber-border/50'
+              }`}
+            >
+              {isMemberLead && (
+                <span className="text-amber-400 text-[10px]">★</span>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="text-cyber-text font-bold truncate">{m.name}</div>
+                <div className="text-cyber-text-dim text-[10px]">
+                  {m.department} · {m.section}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Problem Statement - assigned */}
+      {ps && (
+        <div className="p-4 rounded-xl bg-violet-950/40 border border-violet-500/30 space-y-2">
+          <div className="text-[10px] text-violet-400 font-bold font-mono">ASSIGNED PROBLEM STATEMENT</div>
+          <div className="text-sm font-bold text-cyber-text font-mono">{ps.title}</div>
+          {ps.documentUrl && (
+            <a
+              href={ps.documentUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold font-mono transition-colors mt-2"
+            >
+              📄 VIEW DOCUMENT
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* Dice Roll Game - only for team lead when PS not assigned */}
+      {!ps && isLead && psSelectionVisible && (
+        <div className="p-5 rounded-xl bg-gradient-to-br from-violet-950/60 to-cyber-bg border border-violet-500/30 text-center space-y-4">
+          <div className="text-[10px] text-violet-400 font-bold font-mono tracking-widest">
+            🎲 PROBLEM STATEMENT SELECTION
+          </div>
+          <p className="text-xs text-cyber-text-muted font-mono">
+            As the team lead, roll the dice to receive your problem statement. <strong className="text-red-400">No re-rolls allowed!</strong>
+          </p>
+
+          {/* Dice Display */}
+          <div className="flex justify-center py-4">
+            <div
+              className={`w-24 h-24 rounded-2xl border-2 flex items-center justify-center text-4xl font-black font-mono transition-all duration-300 ${
+                diceAnimating
+                  ? 'border-violet-500 bg-violet-500/20 text-violet-400 animate-bounce shadow-lg shadow-violet-500/30'
+                  : diceNumber
+                  ? 'border-emerald-500 bg-emerald-500/20 text-emerald-400 shadow-lg shadow-emerald-500/30'
+                  : 'border-cyber-border bg-cyber-surface text-cyber-text-dim'
+              }`}
+            >
+              {diceNumber || '?'}
+            </div>
+          </div>
+
+          {!rolledPS && (
+            <button
+              onClick={handleRollDice}
+              disabled={rolling}
+              className={`px-8 py-3 rounded-xl font-bold text-sm font-mono transition-all ${
+                rolling
+                  ? 'bg-violet-500/30 text-violet-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50'
+              }`}
+            >
+              {rolling ? '🎲 ROLLING...' : '🎲 ROLL THE DICE'}
+            </button>
+          )}
+
+          {rolledPS && (
+            <div className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/30 space-y-2 text-left">
+              <div className="text-[10px] text-emerald-400 font-bold font-mono">🎉 YOU GOT</div>
+              <div className="text-sm font-bold text-cyber-text font-mono">{rolledPS.title}</div>
+              {rolledPS.documentUrl && (
+                <a
+                  href={rolledPS.documentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold font-mono transition-colors mt-1"
+                >
+                  📄 VIEW DOCUMENT
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Waiting for PS selection */}
+      {!ps && isLead && !psSelectionVisible && (
+        <div className="p-4 rounded-xl bg-cyber-surface/50 border border-cyber-border text-center text-xs text-cyber-text-muted font-mono">
+          🔒 Problem statement selection is not yet open. The admin will enable it soon.
+        </div>
+      )}
+
+      {!ps && !isLead && (
+        <div className="p-4 rounded-xl bg-cyber-surface/50 border border-cyber-border text-center text-xs text-cyber-text-muted font-mono">
+          ⏳ Your team lead will select the problem statement.
+        </div>
+      )}
     </div>
   );
 }
