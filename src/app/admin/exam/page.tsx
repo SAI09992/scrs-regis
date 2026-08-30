@@ -17,10 +17,21 @@ export default function AdminExamPage() {
   const [loadingQuestions, setLoadingQuestions] = useState(true);
   const [editQuestion, setEditQuestion] = useState<any>(null);
 
+  // Attempts State
+  const [attempts, setAttempts] = useState<any[]>([]);
+  const [loadingAttempts, setLoadingAttempts] = useState(false);
+  const [unblocking, setUnblocking] = useState<string | null>(null);
+
   useEffect(() => {
     fetchSettings();
     fetchQuestions();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'attempts') {
+      fetchAttempts();
+    }
+  }, [activeTab]);
 
   const fetchSettings = async () => {
     try {
@@ -47,6 +58,44 @@ export default function AdminExamPage() {
       toast.error('Failed to load questions');
     } finally {
       setLoadingQuestions(false);
+    }
+  };
+
+  const fetchAttempts = async () => {
+    setLoadingAttempts(true);
+    try {
+      const res = await fetch('/api/admin/exam-attempts');
+      const data = await res.json();
+      if (data.success) {
+        setAttempts(data.attempts);
+      }
+    } catch (e) {
+      toast.error('Failed to load attempts');
+    } finally {
+      setLoadingAttempts(false);
+    }
+  };
+
+  const handleUnblock = async (attemptId: string) => {
+    if (!confirm('Unblock this user? Their attempt will be completely reset.')) return;
+    setUnblocking(attemptId);
+    try {
+      const res = await fetch('/api/admin/exam-attempts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ attemptId, action: 'unblock' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success(data.message);
+        fetchAttempts(); // Refresh list
+      } else {
+        toast.error(data.error || 'Failed to unblock');
+      }
+    } catch (e) {
+      toast.error('Network error');
+    } finally {
+      setUnblocking(null);
     }
   };
 
@@ -308,15 +357,82 @@ export default function AdminExamPage() {
 
       {/* ATTEMPTS TAB */}
       {activeTab === 'attempts' && (
-        <div className="p-8 text-center border border-cyber-border rounded-2xl cyber-glass space-y-4">
-          <ShieldAlert className="w-12 h-12 text-cyber-text-dim mx-auto" />
-          <h2 className="font-mono text-cyber-text font-bold">ATTEMPTS MONITORING</h2>
-          <p className="text-xs text-cyber-text-muted max-w-md mx-auto">
-            Live monitoring and exporting of exam attempts will appear here once the exam is active and participants begin taking it.
-          </p>
-          <button disabled className="mt-4 px-4 py-2 rounded-lg bg-cyber-surface border border-cyber-border text-cyber-text-muted text-xs font-bold inline-flex items-center gap-2 opacity-50">
-            <Download className="w-4 h-4" /> EXPORT LOGS & SCORES
-          </button>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="font-mono text-sm font-bold text-cyber-text flex items-center gap-2">
+              <Users className="w-4 h-4" /> EXAM ATTEMPTS
+            </h2>
+            <button disabled className="px-4 py-2 rounded-lg bg-cyber-surface border border-cyber-border text-cyber-text-muted text-xs font-bold inline-flex items-center gap-2 opacity-50 cursor-not-allowed">
+              <Download className="w-4 h-4" /> EXPORT LOGS & SCORES
+            </button>
+          </div>
+
+          {loadingAttempts ? (
+            <div className="flex justify-center p-8"><Loader2 className="w-6 h-6 animate-spin text-cyber-primary" /></div>
+          ) : attempts.length === 0 ? (
+            <div className="p-8 text-center text-cyber-text-muted text-xs font-mono border border-cyber-border border-dashed rounded-2xl">
+              No attempts recorded yet.
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-xl border border-cyber-border">
+              <table className="w-full text-left text-xs font-mono whitespace-nowrap">
+                <thead className="bg-cyber-surface/50 border-b border-cyber-border text-cyber-text-dim">
+                  <tr>
+                    <th className="p-4 font-bold">CADET / REG ID</th>
+                    <th className="p-4 font-bold">STATUS</th>
+                    <th className="p-4 font-bold">SCORE</th>
+                    <th className="p-4 font-bold">WARNINGS</th>
+                    <th className="p-4 font-bold text-right">ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-cyber-border/50">
+                  {attempts.map((attempt) => (
+                    <tr key={attempt.id} className="hover:bg-cyber-surface/30">
+                      <td className="p-4">
+                        <div className="font-bold text-cyber-text">{attempt.name}</div>
+                        <div className="text-[10px] text-cyber-text-muted">{attempt.registrationId}</div>
+                      </td>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded-md text-[10px] font-bold ${
+                          attempt.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' :
+                          attempt.status === 'terminated' ? 'bg-red-500/20 text-red-400' :
+                          attempt.status === 'in_progress' ? 'bg-amber-500/20 text-amber-400' :
+                          'bg-cyber-surface text-cyber-text-muted'
+                        }`}>
+                          {attempt.status.toUpperCase().replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="p-4 font-bold text-cyan-400">
+                        {attempt.score !== null ? `${attempt.score} / ${questions.length}` : '-'}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-1">
+                          <AlertTriangle className={`w-3.5 h-3.5 ${attempt.warningsCount > 0 ? 'text-amber-400' : 'text-cyber-text-muted'}`} />
+                          <span className={attempt.warningsCount > 0 ? 'text-amber-400' : 'text-cyber-text-muted'}>
+                            {attempt.warningsCount}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-right">
+                        {attempt.status === 'terminated' ? (
+                          <button
+                            onClick={() => handleUnblock(attempt.id)}
+                            disabled={unblocking === attempt.id}
+                            className="px-3 py-1.5 rounded-lg bg-red-950/40 text-red-400 border border-red-500/30 hover:bg-red-950 hover:text-red-300 transition-colors font-bold text-[10px] flex items-center gap-2 ml-auto"
+                          >
+                            {unblocking === attempt.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+                            UNBLOCK USER
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-cyber-text-muted">No Action</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>
