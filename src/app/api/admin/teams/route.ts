@@ -41,7 +41,25 @@ export async function GET() {
       problemStatement: t.problemStatementId ? psMap[t.problemStatementId] || null : null,
     }));
 
-    return NextResponse.json({ success: true, teams: teamsWithMembers });
+    const allRegistrations = await db
+      .select({
+        id: registrations.id,
+        registrationId: registrations.registrationId,
+        name: registrations.name,
+        email: registrations.email,
+        registerNumber: registrations.registerNumber,
+        department: registrations.department,
+        year: registrations.year,
+        section: registrations.section,
+        phone: registrations.phone,
+      })
+      .from(registrations);
+
+    const assignedRegIds = new Set(allMembers.filter(m => m.registrationId).map((m) => m.registrationId));
+    
+    const unassignedUsers = allRegistrations.filter((r) => !assignedRegIds.has(r.id));
+
+    return NextResponse.json({ success: true, teams: teamsWithMembers, unassignedUsers });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err?.message }, { status: 500 });
   }

@@ -56,9 +56,10 @@ interface Team {
 }
 
 export default function AdminTeamsPage() {
-  const [activeTab, setActiveTab] = useState<'teams' | 'ps' | 'controls'>('teams');
+  const [activeTab, setActiveTab] = useState<'teams' | 'unassigned' | 'ps' | 'controls'>('teams');
   const [loading, setLoading] = useState(true);
   const [teams, setTeams] = useState<Team[]>([]);
+  const [unassignedUsers, setUnassignedUsers] = useState<any[]>([]);
   const [psList, setPsList] = useState<ProblemStatement[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -88,7 +89,10 @@ export default function AdminTeamsPage() {
     try {
       const res = await fetch('/api/admin/teams');
       const data = await res.json();
-      if (data.success) setTeams(data.teams || []);
+      if (data.success) {
+        setTeams(data.teams || []);
+        setUnassignedUsers(data.unassignedUsers || []);
+      }
     } catch (e) { console.error(e); }
   };
 
@@ -293,10 +297,10 @@ export default function AdminTeamsPage() {
         </button>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-cyber-border pb-1">
+      <div className="flex gap-2 border-b border-cyber-border pb-1 overflow-x-auto">
         {[
           { key: 'teams' as const, label: 'TEAMS OVERVIEW', icon: Users },
+          { key: 'unassigned' as const, label: 'UNASSIGNED USERS', icon: UserPlus },
           { key: 'ps' as const, label: 'PROBLEM STATEMENTS', icon: FileText },
           { key: 'controls' as const, label: 'VISIBILITY CONTROLS', icon: Eye },
         ].map((tab) => (
@@ -496,6 +500,49 @@ export default function AdminTeamsPage() {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 1.5: UNASSIGNED USERS */}
+      {activeTab === 'unassigned' && (
+        <div className="space-y-4">
+          <div className="p-4 rounded-xl cyber-glass border border-amber-500/30 text-center max-w-sm mx-auto">
+            <div className="text-[10px] text-cyber-text-muted">TOTAL UNASSIGNED</div>
+            <div className="text-2xl font-bold text-amber-400">{unassignedUsers.length}</div>
+          </div>
+          
+          <div className="bg-cyber-surface/30 rounded-2xl border border-cyber-border overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs font-mono whitespace-nowrap">
+                <thead className="bg-cyber-surface/80 text-cyber-text-dim border-b border-cyber-border">
+                  <tr>
+                    <th className="px-4 py-3 font-bold">NAME</th>
+                    <th className="px-4 py-3 font-bold">REG NUMBER</th>
+                    <th className="px-4 py-3 font-bold">DEPT & SECTION</th>
+                    <th className="px-4 py-3 font-bold">PHONE</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-cyber-border/50 text-cyber-text">
+                  {unassignedUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-8 text-center text-cyber-text-muted">
+                        All registered users are assigned to a team.
+                      </td>
+                    </tr>
+                  ) : (
+                    unassignedUsers.map((u) => (
+                      <tr key={u.id} className="hover:bg-cyber-surface/40 transition-colors">
+                        <td className="px-4 py-3 font-bold">{u.name}</td>
+                        <td className="px-4 py-3 text-cyber-text-dim">{u.registerNumber}</td>
+                        <td className="px-4 py-3">{u.department} - {u.section}</td>
+                        <td className="px-4 py-3 text-cyber-text-dim">{u.phone}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
