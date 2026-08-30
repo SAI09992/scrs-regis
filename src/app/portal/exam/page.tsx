@@ -238,27 +238,27 @@ export default function SecureExamPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-cyber-text font-sans pb-20 select-none">
       {/* Fixed Header */}
-      <header className="sticky top-0 z-40 bg-cyber-bg-elevated/95 backdrop-blur-md border-b border-cyber-border px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3 text-cyan-400">
+      <header className="sticky top-0 z-40 bg-cyber-bg-elevated/95 backdrop-blur-md border-b border-cyber-border px-4 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-3 text-cyan-400 w-full md:w-auto justify-center md:justify-start">
           <ShieldAlert className="w-6 h-6" />
-          <h1 className="font-mono font-bold tracking-widest text-sm">NEXTGEN SECURE EXAM</h1>
+          <h1 className="font-mono font-bold tracking-widest text-sm md:text-base truncate">NEXTGEN SECURE EXAM</h1>
         </div>
         
-        <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 bg-amber-950/30 px-4 py-2 rounded-xl border border-amber-500/30 text-amber-400 font-mono text-sm font-bold">
-            <AlertTriangle className="w-4 h-4" />
-            WARNINGS: <span className={warningsCount > 0 ? 'text-red-400' : ''}>{warningsCount} / {warningLimit}</span>
+        <div className="flex flex-wrap items-center justify-center gap-2 md:gap-6 w-full md:w-auto">
+          <div className="flex items-center gap-2 bg-amber-950/30 px-3 md:px-4 py-2 rounded-xl border border-amber-500/30 text-amber-400 font-mono text-xs md:text-sm font-bold flex-1 md:flex-none justify-center">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span className="whitespace-nowrap">WARNINGS: <span className={warningsCount > 0 ? 'text-red-400' : ''}>{warningsCount}/{warningLimit}</span></span>
           </div>
           
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border font-mono font-bold text-lg ${timeLeft && timeLeft < 300 ? 'bg-red-950/40 border-red-500 text-red-500 animate-pulse' : 'bg-cyan-950/30 border-cyan-500/30 text-cyan-400'}`}>
-            <Clock className="w-5 h-5" />
+          <div className={`flex items-center justify-center gap-2 px-3 md:px-4 py-2 rounded-xl border font-mono font-bold text-sm md:text-lg flex-1 md:flex-none ${timeLeft && timeLeft < 300 ? 'bg-red-950/40 border-red-500 text-red-500 animate-pulse' : 'bg-cyan-950/30 border-cyan-500/30 text-cyan-400'}`}>
+            <Clock className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
             {timeLeft !== null ? formatTime(timeLeft) : '--:--'}
           </div>
           
           <CyberButton 
             variant="primary" 
             glow 
-            className="bg-cyan-600 hover:bg-cyan-500 text-white gap-2"
+            className="bg-cyan-600 hover:bg-cyan-500 text-white gap-2 w-full md:w-auto py-2 text-xs md:text-sm"
             onClick={() => {
               if (confirm('Are you sure you want to submit your exam early?')) {
                 submitExam('submit_answers');
@@ -266,7 +266,7 @@ export default function SecureExamPage() {
             }}
             disabled={submitting}
           >
-            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+            {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4 shrink-0" />}
             SUBMIT EXAM
           </CyberButton>
         </div>
@@ -276,14 +276,14 @@ export default function SecureExamPage() {
       <main className="max-w-4xl mx-auto mt-8 px-4 space-y-8">
         {questions.map((q, idx) => (
           <div key={q.id} className="p-6 rounded-2xl cyber-glass border border-cyber-border space-y-4">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-cyan-950/50 border border-cyan-500 text-cyan-400 flex items-center justify-center font-bold font-mono text-sm">
+            <div className="flex items-start gap-3 md:gap-4">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-cyan-950/50 border border-cyan-500 text-cyan-400 flex items-center justify-center font-bold font-mono text-xs md:text-sm">
                 {idx + 1}
               </div>
-              <p className="text-lg font-medium leading-relaxed mt-0.5">{q.questionText}</p>
+              <p className="text-base md:text-lg font-medium leading-relaxed mt-0.5">{q.questionText}</p>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-0 md:pl-12 pt-2">
               {q.options.map((opt: string, oIdx: number) => {
                 const isSelected = answers[q.id] === opt;
                 return (
