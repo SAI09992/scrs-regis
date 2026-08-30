@@ -12,6 +12,7 @@ export default function SecureExamPage() {
   const [loading, setLoading] = useState(true);
   const [examState, setExamState] = useState<'initializing' | 'active' | 'terminated' | 'completed'>('initializing');
   const [questions, setQuestions] = useState<any[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   
   const [warningsCount, setWarningsCount] = useState(0);
@@ -273,39 +274,78 @@ export default function SecureExamPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto mt-8 px-4 space-y-8">
-        {questions.map((q, idx) => (
-          <div key={q.id} className="p-6 rounded-2xl cyber-glass border border-cyber-border space-y-4">
-            <div className="flex items-start gap-3 md:gap-4">
-              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-cyan-950/50 border border-cyan-500 text-cyan-400 flex items-center justify-center font-bold font-mono text-xs md:text-sm">
-                {idx + 1}
+      <main className="max-w-4xl mx-auto mt-8 px-4 space-y-6">
+        {questions.length > 0 && (
+          <>
+            <div className="p-6 md:p-8 rounded-2xl cyber-glass border border-cyber-border space-y-6">
+              <div className="flex items-start gap-3 md:gap-4">
+                <div className="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 rounded-full bg-cyan-950/50 border border-cyan-500 text-cyan-400 flex items-center justify-center font-bold font-mono text-sm md:text-base">
+                  {currentQuestionIndex + 1}
+                </div>
+                <p className="text-lg md:text-xl font-medium leading-relaxed mt-0.5">{questions[currentQuestionIndex].questionText}</p>
               </div>
-              <p className="text-base md:text-lg font-medium leading-relaxed mt-0.5">{q.questionText}</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pl-0 md:pl-14 pt-4">
+                {questions[currentQuestionIndex].options.map((opt: string, oIdx: number) => {
+                  const isSelected = answers[questions[currentQuestionIndex].id] === opt;
+                  return (
+                    <button
+                      key={oIdx}
+                      onClick={() => setAnswers(prev => ({ ...prev, [questions[currentQuestionIndex].id]: opt }))}
+                      className={`text-left px-5 py-4 rounded-xl border font-mono text-sm transition-all flex items-center gap-4 ${
+                        isSelected 
+                          ? 'bg-cyan-950/40 border-cyan-500 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.2)]' 
+                          : 'bg-cyber-surface/50 border-cyber-border/50 text-cyber-text hover:border-cyan-500/50 hover:bg-cyber-surface'
+                      }`}
+                    >
+                      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${isSelected ? 'border-cyan-500' : 'border-cyber-border'}`}>
+                        {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-cyan-500" />}
+                      </div>
+                      {opt}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-0 md:pl-12 pt-2">
-              {q.options.map((opt: string, oIdx: number) => {
-                const isSelected = answers[q.id] === opt;
-                return (
-                  <button
-                    key={oIdx}
-                    onClick={() => setAnswers(prev => ({ ...prev, [q.id]: opt }))}
-                    className={`text-left px-4 py-3 rounded-xl border font-mono text-sm transition-all flex items-center gap-3 ${
-                      isSelected 
-                        ? 'bg-cyan-950/40 border-cyan-500 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.2)]' 
-                        : 'bg-cyber-surface/50 border-cyber-border/50 text-cyber-text hover:border-cyan-500/50 hover:bg-cyber-surface'
-                    }`}
-                  >
-                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${isSelected ? 'border-cyan-500' : 'border-cyber-border'}`}>
-                      {isSelected && <div className="w-2 h-2 rounded-full bg-cyan-500" />}
-                    </div>
-                    {opt}
-                  </button>
-                );
-              })}
+
+            {/* Pagination Controls */}
+            <div className="flex items-center justify-between p-4 rounded-2xl border border-cyber-border bg-cyber-bg-elevated/50 backdrop-blur-sm">
+              <button
+                onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
+                disabled={currentQuestionIndex === 0}
+                className={`px-6 py-3 rounded-xl font-mono text-sm font-bold transition-colors ${currentQuestionIndex === 0 ? 'opacity-50 cursor-not-allowed bg-cyber-surface text-cyber-text-muted border border-cyber-border' : 'bg-cyber-surface/50 text-cyber-text hover:bg-cyber-surface border border-cyber-border'}`}
+              >
+                PREVIOUS
+              </button>
+
+              <div className="font-mono text-sm text-cyber-text-muted hidden md:block">
+                QUESTION {currentQuestionIndex + 1} OF {questions.length}
+              </div>
+
+              {currentQuestionIndex < questions.length - 1 ? (
+                <button
+                  onClick={() => setCurrentQuestionIndex(prev => Math.min(questions.length - 1, prev + 1))}
+                  className="px-6 py-3 rounded-xl font-mono text-sm font-bold bg-cyan-950/40 border border-cyan-500/50 text-cyan-400 hover:bg-cyan-900/40 transition-colors"
+                >
+                  NEXT
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    if (confirm('Are you sure you want to submit your exam?')) {
+                      submitExam('submit_answers');
+                    }
+                  }}
+                  disabled={submitting}
+                  className="px-6 py-3 rounded-xl font-mono text-sm font-bold bg-cyan-600 border border-cyan-500 text-white hover:bg-cyan-500 transition-colors flex items-center gap-2"
+                >
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                  SUBMIT EXAM
+                </button>
+              )}
             </div>
-          </div>
-        ))}
+          </>
+        )}
       </main>
 
       {/* Warning Overlay */}
