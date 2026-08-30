@@ -73,6 +73,11 @@ export default function AdminTeamsPage() {
   const [addMemberRegNum, setAddMemberRegNum] = useState('');
   const [addingMember, setAddingMember] = useState(false);
 
+  // Unassigned user actions
+  const [creatingTeamFor, setCreatingTeamFor] = useState<string | null>(null);
+  const [assigningUser, setAssigningUser] = useState<string | null>(null);
+  const [assignTeamSelectId, setAssignTeamSelectId] = useState<string>('');
+
   // Edit team name modal
   const [editTeamId, setEditTeamId] = useState<string | null>(null);
   const [editTeamName, setEditTeamName] = useState('');
@@ -189,6 +194,51 @@ export default function AdminTeamsPage() {
       }
     } catch (e) { toast.error('Network error'); }
     finally { setAddingMember(false); }
+  };
+
+  const handleCreateTeamForUser = async (registerNumber: string) => {
+    setCreatingTeamFor(registerNumber);
+    try {
+      const res = await fetch('/api/admin/teams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          teamName: '',
+          leadRegistrationNumber: registerNumber,
+          memberRegistrationNumbers: [registerNumber],
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Team created with user as lead!');
+        fetchTeams();
+      } else {
+        toast.error(data.error || 'Failed to create team');
+      }
+    } catch (e) { toast.error('Network error'); }
+    finally { setCreatingTeamFor(null); }
+  };
+
+  const handleAssignUserToTeam = async (registerNumber: string, teamId: string) => {
+    if (!teamId) return;
+    setAssigningUser(registerNumber);
+    try {
+      const res = await fetch('/api/admin/teams/members', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamId, registerNumber }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('User assigned to team!');
+        setAssigningUser(null);
+        setAssignTeamSelectId('');
+        fetchTeams();
+      } else {
+        toast.error(data.error || 'Failed to assign');
+      }
+    } catch (e) { toast.error('Network error'); }
+    finally { setAssigningUser(null); }
   };
 
   const handleRemoveMember = async (memberId: string) => {
@@ -520,7 +570,7 @@ export default function AdminTeamsPage() {
                     <th className="px-4 py-3 font-bold">NAME</th>
                     <th className="px-4 py-3 font-bold">REG NUMBER</th>
                     <th className="px-4 py-3 font-bold">DEPT & SECTION</th>
-                    <th className="px-4 py-3 font-bold">PHONE</th>
+                    <th className="px-4 py-3 font-bold">ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-cyber-border/50 text-cyber-text">
@@ -536,7 +586,57 @@ export default function AdminTeamsPage() {
                         <td className="px-4 py-3 font-bold">{u.name}</td>
                         <td className="px-4 py-3 text-cyber-text-dim">{u.registerNumber}</td>
                         <td className="px-4 py-3">{u.department} - {u.section}</td>
-                        <td className="px-4 py-3 text-cyber-text-dim">{u.phone}</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleCreateTeamForUser(u.registerNumber)}
+                              disabled={creatingTeamFor === u.registerNumber}
+                              className="px-3 py-1.5 rounded-lg bg-cyber-primary/20 text-cyber-primary hover:bg-cyber-primary/30 font-bold transition-colors disabled:opacity-50 flex items-center gap-1"
+                            >
+                              {creatingTeamFor === u.registerNumber ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Crown className="w-3.5 h-3.5" />}
+                              CREATE TEAM
+                            </button>
+                            
+                            <div className="flex items-center gap-1">
+                              {assigningUser === u.registerNumber ? (
+                                <div className="flex items-center gap-1">
+                                  <select
+                                    value={assignTeamSelectId}
+                                    onChange={(e) => setAssignTeamSelectId(e.target.value)}
+                                    className="px-2 py-1.5 bg-cyber-surface border border-emerald-500/50 rounded-lg text-cyber-text text-xs focus:outline-none w-36"
+                                  >
+                                    <option value="">Select Team...</option>
+                                    {teams.filter(t => t.members.length < 5).map(t => (
+                                      <option key={t.id} value={t.id}>
+                                        {t.teamName || '(unnamed)'} ({t.members.length}/5)
+                                      </option>
+                                    ))}
+                                  </select>
+                                  <button
+                                    onClick={() => handleAssignUserToTeam(u.registerNumber, assignTeamSelectId)}
+                                    disabled={!assignTeamSelectId}
+                                    className="px-2 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-colors disabled:opacity-50"
+                                  >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                  </button>
+                                  <button
+                                    onClick={() => { setAssigningUser(null); setAssignTeamSelectId(''); }}
+                                    className="px-2 py-1.5 rounded-lg bg-red-950/40 text-red-400 hover:bg-red-900/60 transition-colors"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => setAssigningUser(u.registerNumber)}
+                                  className="px-3 py-1.5 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-900/60 font-bold transition-colors flex items-center gap-1"
+                                >
+                                  <UserPlus className="w-3.5 h-3.5" /> ASSIGN
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </td>
                       </tr>
                     ))
                   )}
