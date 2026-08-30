@@ -126,7 +126,7 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     await requireAdmin();
-    const { teamId, teamName, teamLeadRegistrationId } = await req.json();
+    const { teamId, teamName, teamLeadRegistrationId, problemStatementId } = await req.json();
 
     if (!teamId) {
       return NextResponse.json({ success: false, error: 'teamId required' }, { status: 400 });
@@ -135,6 +135,7 @@ export async function PUT(req: NextRequest) {
     const updates: any = {};
     if (teamName !== undefined) updates.teamName = teamName;
     if (teamLeadRegistrationId !== undefined) updates.teamLeadRegistrationId = teamLeadRegistrationId;
+    if (problemStatementId !== undefined) updates.problemStatementId = problemStatementId;
 
     if (Object.keys(updates).length > 0) {
       await db.update(teams).set(updates).where(eq(teams.id, teamId));

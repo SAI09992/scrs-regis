@@ -317,6 +317,23 @@ export default function AdminTeamsPage() {
     } catch (e) { toast.error('Failed'); }
   };
 
+  const handleResetTeamPS = async (teamId: string) => {
+    if (!confirm('Are you sure you want to reset the problem statement for this team? They will need to re-roll.')) return;
+    try {
+      const res = await fetch('/api/admin/teams', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teamId, problemStatementId: null }),
+      });
+      if ((await res.json()).success) {
+        toast.success('PS allocation reset!');
+        fetchTeams();
+      } else {
+        toast.error('Failed to reset');
+      }
+    } catch (e) { toast.error('Network error'); }
+  };
+
   const filteredTeams = teams.filter((t) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
@@ -749,39 +766,60 @@ export default function AdminTeamsPage() {
               </div>
             ) : (
               psList.map((ps) => {
-                const assignedCount = teams.filter((t) => t.problemStatementId === ps.id).length;
+                const assignedTeams = teams.filter((t) => t.problemStatementId === ps.id);
                 return (
-                  <div key={ps.id} className="p-4 rounded-xl cyber-glass border border-cyber-border flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-violet-950/40 border border-violet-500/30 flex items-center justify-center text-violet-400 font-bold text-lg">
-                        {ps.slotNumber}
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-cyber-text font-mono">{ps.title}</div>
-                        <div className="text-[10px] text-cyber-text-dim flex items-center gap-3 mt-0.5">
-                          <span>Teams: {assignedCount}/{ps.maxTeams}</span>
-                          {ps.documentUrl && (
-                            <a href={ps.documentUrl} target="_blank" rel="noopener noreferrer" className="text-cyber-primary hover:underline">
-                              📄 View Document
-                            </a>
-                          )}
+                  <div key={ps.id} className="p-4 rounded-xl cyber-glass border border-cyber-border space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-violet-950/40 border border-violet-500/30 flex items-center justify-center text-violet-400 font-bold text-lg">
+                          {ps.slotNumber}
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-cyber-text font-mono">{ps.title}</div>
+                          <div className="text-[10px] text-cyber-text-dim flex items-center gap-3 mt-0.5">
+                            <span>Teams: {assignedTeams.length}/{ps.maxTeams}</span>
+                            {ps.documentUrl && (
+                              <a href={ps.documentUrl} target="_blank" rel="noopener noreferrer" className="text-cyber-primary hover:underline">
+                                📄 View Document
+                              </a>
+                            )}
+                          </div>
                         </div>
                       </div>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => { setEditPsId(ps.id); setPsSlot(ps.slotNumber); setPsTitle(ps.title); setPsDocUrl(ps.documentUrl || ''); setPsMaxTeams(ps.maxTeams); }}
+                          className="px-2 py-1 text-xs text-cyber-text-muted hover:text-cyber-primary"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeletePS(ps.id)}
+                          className="p-1.5 text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => { setEditPsId(ps.id); setPsSlot(ps.slotNumber); setPsTitle(ps.title); setPsDocUrl(ps.documentUrl || ''); setPsMaxTeams(ps.maxTeams); }}
-                        className="px-2 py-1 text-xs text-cyber-text-muted hover:text-cyber-primary"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeletePS(ps.id)}
-                        className="p-1.5 text-red-400 hover:text-red-300"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                    
+                    {assignedTeams.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-cyber-border/50">
+                        <div className="text-[10px] text-cyber-text-muted mb-2 font-mono">ASSIGNED TEAMS</div>
+                        <div className="space-y-2">
+                          {assignedTeams.map(t => (
+                            <div key={t.id} className="flex items-center justify-between bg-cyber-surface/30 px-3 py-2 rounded-lg border border-cyber-border/30">
+                              <span className="text-xs font-mono text-cyber-text">{t.teamName || '(unnamed)'}</span>
+                              <button
+                                onClick={() => handleResetTeamPS(t.id)}
+                                className="text-[10px] text-amber-400 hover:text-amber-300 px-2 py-1 bg-amber-950/30 rounded border border-amber-500/20"
+                              >
+                                RESET ROLL
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })
