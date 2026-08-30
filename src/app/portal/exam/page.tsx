@@ -215,12 +215,6 @@ export default function SecureExamPage() {
             <p className="text-sm text-emerald-400 mt-2 font-mono">
               Your responses have been successfully recorded.
             </p>
-            {score !== null && (
-              <div className="mt-6 p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/30">
-                <div className="text-[10px] text-emerald-400/70 font-bold mb-1">SCORE</div>
-                <div className="text-3xl font-black">{score} / {questions.length}</div>
-              </div>
-            )}
           </div>
           <CyberButton variant="primary" glow className="w-full bg-emerald-600 hover:bg-emerald-500 text-white" onClick={() => router.push('/portal')}>
             RETURN TO PORTAL
