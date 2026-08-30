@@ -294,6 +294,22 @@ export default function AdminTeamsPage() {
     finally { setSavingPS(false); }
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      toast.error('File too large. Max 2MB.');
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPsDocUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleDeletePS = async (id: string) => {
     try {
       const res = await fetch(`/api/admin/problem-statements?id=${id}`, { method: 'DELETE' });
@@ -693,13 +709,19 @@ export default function AdminTeamsPage() {
             </div>
 
             <div>
-              <label className="text-[10px] text-cyber-text-muted block mb-1">DOCUMENT URL (optional)</label>
-              <input
-                value={psDocUrl}
-                onChange={(e) => setPsDocUrl(e.target.value)}
-                placeholder="https://drive.google.com/... or paste PDF link"
-                className="w-full px-3 py-2 rounded-lg bg-cyber-surface border border-cyber-border text-cyber-text text-xs font-mono"
-              />
+              <label className="text-[10px] text-cyber-text-muted block mb-1">UPLOAD PROBLEM STATEMENT (PDF)</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleFileUpload}
+                  className="w-full px-3 py-2 rounded-lg bg-cyber-surface border border-cyber-border text-cyber-text text-xs font-mono file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-cyber-primary/20 file:text-cyber-primary hover:file:bg-cyber-primary/30"
+                />
+                {psDocUrl && (
+                  <div className="text-[10px] text-emerald-400 font-bold whitespace-nowrap">✓ File Attached</div>
+                )}
+              </div>
+              <p className="text-[10px] text-cyber-text-dim mt-1">Max file size: 2MB. The PDF will be converted to Base64 and stored directly in the database.</p>
             </div>
 
             <div className="flex items-center gap-2">
