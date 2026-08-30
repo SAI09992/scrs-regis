@@ -261,7 +261,8 @@ export default function SecureExamPage() {
             glow 
             className="bg-cyan-600 hover:bg-cyan-500 text-white gap-2 w-full md:w-auto py-2 text-xs md:text-sm"
             onClick={() => {
-              if (confirm('Are you sure you want to submit your exam early?')) {
+              const answeredCount = Object.keys(answers).length;
+              if (confirm(`You have answered ${answeredCount} out of ${questions.length} questions. Are you sure you want to submit your exam early?`)) {
                 submitExam('submit_answers');
               }
             }}
@@ -332,7 +333,8 @@ export default function SecureExamPage() {
               ) : (
                 <button
                   onClick={() => {
-                    if (confirm('Are you sure you want to submit your exam?')) {
+                    const answeredCount = Object.keys(answers).length;
+                    if (confirm(`You have answered ${answeredCount} out of ${questions.length} questions. Are you sure you want to submit your exam?`)) {
                       submitExam('submit_answers');
                     }
                   }}
