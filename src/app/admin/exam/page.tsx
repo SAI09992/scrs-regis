@@ -362,9 +362,13 @@ export default function AdminExamPage() {
             <h2 className="font-mono text-sm font-bold text-cyber-text flex items-center gap-2">
               <Users className="w-4 h-4" /> EXAM ATTEMPTS
             </h2>
-            <button disabled className="px-4 py-2 rounded-lg bg-cyber-surface border border-cyber-border text-cyber-text-muted text-xs font-bold inline-flex items-center gap-2 opacity-50 cursor-not-allowed">
+            <a 
+              href="/api/admin/exam-attempts/export"
+              download="exam_results.csv"
+              className="px-4 py-2 rounded-lg bg-cyan-950/40 border border-cyan-500/50 hover:bg-cyan-900/50 text-cyan-400 transition-colors text-xs font-bold inline-flex items-center gap-2"
+            >
               <Download className="w-4 h-4" /> EXPORT LOGS & SCORES
-            </button>
+            </a>
           </div>
 
           {loadingAttempts ? (
