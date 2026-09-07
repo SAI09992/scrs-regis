@@ -20,13 +20,14 @@ export async function GET() {
         startedAt: examAttempts.startedAt,
         endedAt: examAttempts.endedAt,
         registrationId: registrations.registrationId,
+        internalRegId: registrations.id,
         name: registrations.name,
         email: registrations.email,
         phone: registrations.phone
       })
-      .from(examAttempts)
-      .leftJoin(registrations, eq(examAttempts.registrationId, registrations.id))
-      .orderBy(desc(examAttempts.startedAt));
+      .from(registrations)
+      .leftJoin(examAttempts, eq(registrations.id, examAttempts.registrationId))
+      .orderBy(desc(registrations.createdAt));
 
     return NextResponse.json({ success: true, attempts: data });
   } catch (err: any) {
@@ -54,10 +55,27 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === 'update_marks') {
-      await db.update(examAttempts).set({
-        round2Score: round2Score === '' ? null : Number(round2Score),
-        round3Score: round3Score === '' ? null : Number(round3Score)
-      }).where(eq(examAttempts.id, attemptId));
+      const { internalRegId } = body;
+      
+      const r2 = round2Score === '' ? null : Number(round2Score);
+      const r3 = round3Score === '' ? null : Number(round3Score);
+
+      if (attemptId) {
+        await db.update(examAttempts).set({
+          round2Score: r2,
+          round3Score: r3
+        }).where(eq(examAttempts.id, attemptId));
+      } else {
+        // Create a dummy attempt row for this user just to store marks
+        const { v4: uuidv4 } = require('uuid');
+        await db.insert(examAttempts).values({
+          id: uuidv4(),
+          registrationId: internalRegId,
+          status: 'not_started',
+          round2Score: r2,
+          round3Score: r3
+        });
+      }
       
       return NextResponse.json({ success: true, message: 'Marks updated successfully.' });
     }

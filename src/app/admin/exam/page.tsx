@@ -21,7 +21,7 @@ export default function AdminExamPage() {
   const [attempts, setAttempts] = useState<any[]>([]);
   const [loadingAttempts, setLoadingAttempts] = useState(false);
   const [unblocking, setUnblocking] = useState<string | null>(null);
-  const [editingMarks, setEditingMarks] = useState<{ id: string, r2: string, r3: string } | null>(null);
+  const [editingMarks, setEditingMarks] = useState<{ id: string | null, internalRegId: string, r2: string, r3: string } | null>(null);
   const [savingMarks, setSavingMarks] = useState(false);
 
   useEffect(() => {
@@ -109,7 +109,8 @@ export default function AdminExamPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          attemptId: editingMarks.id, 
+          attemptId: editingMarks.id,
+          internalRegId: editingMarks.internalRegId,
           action: 'update_marks',
           round2Score: editingMarks.r2,
           round3Score: editingMarks.r3
@@ -424,7 +425,7 @@ export default function AdminExamPage() {
                 </thead>
                 <tbody className="divide-y divide-cyber-border/50">
                   {attempts.map((attempt) => (
-                    <tr key={attempt.id} className="hover:bg-cyber-surface/30">
+                    <tr key={attempt.internalRegId} className="hover:bg-cyber-surface/30">
                       <td className="p-4">
                         <div className="font-bold text-cyber-text">{attempt.name}</div>
                         <div className="text-[10px] text-cyber-text-muted">{attempt.registrationId}</div>
@@ -436,7 +437,7 @@ export default function AdminExamPage() {
                           attempt.status === 'in_progress' ? 'bg-amber-500/20 text-amber-400' :
                           'bg-cyber-surface text-cyber-text-muted'
                         }`}>
-                          {attempt.status.toUpperCase().replace('_', ' ')}
+                          {attempt.status ? attempt.status.toUpperCase().replace('_', ' ') : 'NOT ATTEMPTED'}
                         </span>
                       </td>
                       <td className="p-4 font-bold text-cyan-400">
@@ -452,14 +453,14 @@ export default function AdminExamPage() {
                         <div className="flex items-center gap-1">
                           <AlertTriangle className={`w-3.5 h-3.5 ${attempt.warningsCount > 0 ? 'text-amber-400' : 'text-cyber-text-muted'}`} />
                           <span className={attempt.warningsCount > 0 ? 'text-amber-400' : 'text-cyber-text-muted'}>
-                            {attempt.warningsCount}
+                            {attempt.warningsCount || 0}
                           </span>
                         </div>
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => setEditingMarks({ id: attempt.id, r2: attempt.round2Score !== null ? attempt.round2Score.toString() : '', r3: attempt.round3Score !== null ? attempt.round3Score.toString() : '' })}
+                            onClick={() => setEditingMarks({ id: attempt.id || null, internalRegId: attempt.internalRegId, r2: attempt.round2Score !== null && attempt.round2Score !== undefined ? attempt.round2Score.toString() : '', r3: attempt.round3Score !== null && attempt.round3Score !== undefined ? attempt.round3Score.toString() : '' })}
                             className="px-3 py-1.5 rounded-lg bg-cyber-surface border border-cyber-border hover:bg-cyber-bg-elevated transition-colors font-bold text-[10px] flex items-center gap-1.5 text-cyber-text"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
