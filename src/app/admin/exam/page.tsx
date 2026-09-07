@@ -410,21 +410,28 @@ export default function AdminExamPage() {
               No attempts recorded yet.
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-cyber-border">
-              <table className="w-full text-left text-xs font-mono whitespace-nowrap">
-                <thead className="bg-cyber-surface/50 border-b border-cyber-border text-cyber-text-dim">
-                  <tr>
-                    <th className="p-4 font-bold w-12 text-center text-cyber-text-muted">#</th>
-                    <th className="p-4 font-bold">CADET / REG ID</th>
-                    <th className="p-4 font-bold">STATUS</th>
-                    <th className="p-4 font-bold">R1 (QUIZ)</th>
-                    <th className="p-4 font-bold">R2 (UNDERSTANDING)</th>
-                    <th className="p-4 font-bold">R3 SCORE</th>
-                    <th className="p-4 font-bold">WARNINGS</th>
-                    <th className="p-4 font-bold text-right">ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-cyber-border/50">
+            (() => {
+              const total = attempts.length;
+              const r1Count = attempts.filter(a => a.score !== null).length;
+              const r2Count = attempts.filter(a => a.round2Score !== null).length;
+              const r3Count = attempts.filter(a => a.round3Score !== null).length;
+
+              return (
+                <div className="overflow-x-auto rounded-xl border border-cyber-border">
+                  <table className="w-full text-left text-xs font-mono whitespace-nowrap">
+                    <thead className="bg-cyber-surface/50 border-b border-cyber-border text-cyber-text-dim">
+                      <tr>
+                        <th className="p-4 font-bold w-12 text-center text-cyber-text-muted">#</th>
+                        <th className="p-4 font-bold">CADET / REG ID</th>
+                        <th className="p-4 font-bold">STATUS</th>
+                        <th className="p-4 font-bold">R1 (QUIZ) <span className="text-cyan-500/50 text-[10px] ml-1">({r1Count}/{total})</span></th>
+                        <th className="p-4 font-bold">R2 (UNDERSTANDING) <span className="text-emerald-500/50 text-[10px] ml-1">({r2Count}/{total})</span></th>
+                        <th className="p-4 font-bold">R3 SCORE <span className="text-amber-500/50 text-[10px] ml-1">({r3Count}/{total})</span></th>
+                        <th className="p-4 font-bold">WARNINGS</th>
+                        <th className="p-4 font-bold text-right">ACTIONS</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-cyber-border/50">
                   {attempts.map((attempt, index) => (
                     <tr key={attempt.internalRegId} className="hover:bg-cyber-surface/30">
                       <td className="p-4 font-bold text-cyber-text-muted text-center border-r border-cyber-border/30">
@@ -494,6 +501,8 @@ export default function AdminExamPage() {
                 </tbody>
               </table>
             </div>
+          );
+          })()
           )}
         </div>
       )}
