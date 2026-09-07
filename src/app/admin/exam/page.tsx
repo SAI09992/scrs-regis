@@ -21,6 +21,8 @@ export default function AdminExamPage() {
   const [attempts, setAttempts] = useState<any[]>([]);
   const [loadingAttempts, setLoadingAttempts] = useState(false);
   const [unblocking, setUnblocking] = useState<string | null>(null);
+  const [editingMarks, setEditingMarks] = useState<{ id: string, r2: string, r3: string } | null>(null);
+  const [savingMarks, setSavingMarks] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -96,6 +98,35 @@ export default function AdminExamPage() {
       toast.error('Network error');
     } finally {
       setUnblocking(null);
+    }
+  };
+
+  const handleSaveMarks = async () => {
+    if (!editingMarks) return;
+    setSavingMarks(true);
+    try {
+      const res = await fetch('/api/admin/exam-attempts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          attemptId: editingMarks.id, 
+          action: 'update_marks',
+          round2Score: editingMarks.r2,
+          round3Score: editingMarks.r3
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Marks updated successfully!');
+        setEditingMarks(null);
+        fetchAttempts();
+      } else {
+        toast.error(data.error || 'Failed to update marks');
+      }
+    } catch (e) {
+      toast.error('Network error');
+    } finally {
+      setSavingMarks(false);
     }
   };
 
@@ -384,7 +415,9 @@ export default function AdminExamPage() {
                   <tr>
                     <th className="p-4 font-bold">CADET / REG ID</th>
                     <th className="p-4 font-bold">STATUS</th>
-                    <th className="p-4 font-bold">SCORE</th>
+                    <th className="p-4 font-bold">R1 (QUIZ)</th>
+                    <th className="p-4 font-bold">R2 (UNDERSTANDING)</th>
+                    <th className="p-4 font-bold">R3 SCORE</th>
                     <th className="p-4 font-bold">WARNINGS</th>
                     <th className="p-4 font-bold text-right">ACTIONS</th>
                   </tr>
@@ -409,6 +442,12 @@ export default function AdminExamPage() {
                       <td className="p-4 font-bold text-cyan-400">
                         {attempt.score !== null ? `${attempt.score} / ${questions.length}` : '-'}
                       </td>
+                      <td className="p-4 font-bold text-emerald-400">
+                        {attempt.round2Score !== null ? attempt.round2Score : '-'}
+                      </td>
+                      <td className="p-4 font-bold text-amber-400">
+                        {attempt.round3Score !== null ? attempt.round3Score : '-'}
+                      </td>
                       <td className="p-4">
                         <div className="flex items-center gap-1">
                           <AlertTriangle className={`w-3.5 h-3.5 ${attempt.warningsCount > 0 ? 'text-amber-400' : 'text-cyber-text-muted'}`} />
@@ -418,22 +457,32 @@ export default function AdminExamPage() {
                         </div>
                       </td>
                       <td className="p-4 text-right">
-                        {attempt.status === 'terminated' || attempt.status === 'completed' ? (
+                        <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() => handleReset(attempt.id)}
-                            disabled={unblocking === attempt.id}
-                            className={`px-3 py-1.5 rounded-lg border transition-colors font-bold text-[10px] flex items-center gap-2 ml-auto ${
-                              attempt.status === 'terminated' 
-                                ? 'bg-red-950/40 text-red-400 border-red-500/30 hover:bg-red-950 hover:text-red-300' 
-                                : 'bg-amber-950/40 text-amber-400 border-amber-500/30 hover:bg-amber-950 hover:text-amber-300'
-                            }`}
+                            onClick={() => setEditingMarks({ id: attempt.id, r2: attempt.round2Score !== null ? attempt.round2Score.toString() : '', r3: attempt.round3Score !== null ? attempt.round3Score.toString() : '' })}
+                            className="px-3 py-1.5 rounded-lg bg-cyber-surface border border-cyber-border hover:bg-cyber-bg-elevated transition-colors font-bold text-[10px] flex items-center gap-1.5 text-cyber-text"
                           >
-                            {unblocking === attempt.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldAlert className="w-3.5 h-3.5" />}
-                            {attempt.status === 'terminated' ? 'UNBLOCK USER' : 'RESET RETAKE'}
+                            <Edit3 className="w-3.5 h-3.5" />
+                            EDIT MARKS
                           </button>
-                        ) : (
-                          <span className="text-[10px] text-cyber-text-muted">No Action</span>
-                        )}
+                          
+                          {attempt.status === 'terminated' || attempt.status === 'completed' ? (
+                            <button
+                              onClick={() => handleReset(attempt.id)}
+                              disabled={unblocking === attempt.id}
+                              className={`px-3 py-1.5 rounded-lg border transition-colors font-bold text-[10px] flex items-center gap-2 ${
+                                attempt.status === 'terminated' 
+                                  ? 'bg-red-950/40 text-red-400 border-red-500/30 hover:bg-red-950 hover:text-red-300' 
+                                  : 'bg-amber-950/40 text-amber-400 border-amber-500/30 hover:bg-amber-950 hover:text-amber-300'
+                              }`}
+                            >
+                              {unblocking === attempt.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldAlert className="w-3.5 h-3.5" />}
+                              {attempt.status === 'terminated' ? 'UNBLOCK USER' : 'RESET'}
+                            </button>
+                          ) : (
+                            <span className="text-[10px] text-cyber-text-muted"></span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -441,6 +490,55 @@ export default function AdminExamPage() {
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Edit Marks Modal */}
+      {editingMarks && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#0a0a0f] border border-cyber-border rounded-2xl p-6 w-full max-w-sm space-y-4">
+            <h3 className="font-mono font-bold text-cyber-text">EDIT MANUAL MARKS</h3>
+            
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs font-mono text-cyber-text-muted mb-1 block">R2 (Understanding)</label>
+                <input 
+                  type="number" 
+                  value={editingMarks.r2} 
+                  onChange={(e) => setEditingMarks({...editingMarks, r2: e.target.value})}
+                  className="w-full bg-cyber-surface/50 border border-cyber-border rounded-lg px-3 py-2 text-sm font-mono focus:border-cyan-500 outline-none"
+                  placeholder="Enter score"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-mono text-cyber-text-muted mb-1 block">R3 Score</label>
+                <input 
+                  type="number" 
+                  value={editingMarks.r3} 
+                  onChange={(e) => setEditingMarks({...editingMarks, r3: e.target.value})}
+                  className="w-full bg-cyber-surface/50 border border-cyber-border rounded-lg px-3 py-2 text-sm font-mono focus:border-cyan-500 outline-none"
+                  placeholder="Enter score"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button 
+                onClick={() => setEditingMarks(null)}
+                className="px-4 py-2 rounded-lg bg-cyber-surface hover:bg-cyber-border text-xs font-mono font-bold transition-colors"
+              >
+                CANCEL
+              </button>
+              <button 
+                onClick={handleSaveMarks}
+                disabled={savingMarks}
+                className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-mono font-bold transition-colors flex items-center gap-2"
+              >
+                {savingMarks ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                SAVE MARKS
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

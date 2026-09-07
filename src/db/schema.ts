@@ -363,6 +363,8 @@ export const examAttempts = pgTable(
     warningsCount: integer('warnings_count').notNull().default(0),
     violationLogs: jsonb('violation_logs').default([]),
     answers: jsonb('answers').default({}),
+    round2Score: integer('round2_score'),
+    round3Score: integer('round3_score'),
     startedAt: timestamp('started_at'),
     endedAt: timestamp('ended_at'),
   },

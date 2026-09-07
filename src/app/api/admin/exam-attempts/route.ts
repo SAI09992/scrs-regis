@@ -15,6 +15,8 @@ export async function GET() {
         score: examAttempts.score,
         warningsCount: examAttempts.warningsCount,
         violationLogs: examAttempts.violationLogs,
+        round2Score: examAttempts.round2Score,
+        round3Score: examAttempts.round3Score,
         startedAt: examAttempts.startedAt,
         endedAt: examAttempts.endedAt,
         registrationId: registrations.registrationId,
@@ -35,7 +37,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     await requireAdmin();
-    const { attemptId, action } = await req.json();
+    const body = await req.json();
+    const { attemptId, action, round2Score, round3Score } = body;
 
     if (action === 'unblock') {
       await db.update(examAttempts).set({
@@ -48,6 +51,15 @@ export async function POST(req: NextRequest) {
       }).where(eq(examAttempts.id, attemptId));
       
       return NextResponse.json({ success: true, message: 'User unblocked and attempt reset.' });
+    }
+
+    if (action === 'update_marks') {
+      await db.update(examAttempts).set({
+        round2Score: round2Score === '' ? null : Number(round2Score),
+        round3Score: round3Score === '' ? null : Number(round3Score)
+      }).where(eq(examAttempts.id, attemptId));
+      
+      return NextResponse.json({ success: true, message: 'Marks updated successfully.' });
     }
 
     return NextResponse.json({ success: false, error: 'Unknown action' }, { status: 400 });

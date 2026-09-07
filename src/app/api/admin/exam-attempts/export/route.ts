@@ -21,6 +21,8 @@ export async function GET() {
         phone: registrations.phone,
         attemptStatus: examAttempts.status,
         score: examAttempts.score,
+        round2Score: examAttempts.round2Score,
+        round3Score: examAttempts.round3Score,
         warningsCount: examAttempts.warningsCount,
         startedAt: examAttempts.startedAt,
         endedAt: examAttempts.endedAt,
@@ -35,7 +37,9 @@ export async function GET() {
       'Email',
       'Phone',
       'Exam Status',
-      'Score',
+      'Round 1 Score (Quiz)',
+      'Round 2 Score (Understanding)',
+      'Round 3 Score',
       'Warnings',
       'Started At',
       'Ended At'
@@ -44,6 +48,8 @@ export async function GET() {
     const rows = allRegistrations.map(reg => {
       let status = 'Not Attempted';
       let scoreStr = 'Not Attempted';
+      let r2Str = '-';
+      let r3Str = '-';
       let warningsStr = '0';
       let startStr = '';
       let endStr = '';
@@ -51,6 +57,8 @@ export async function GET() {
       if (reg.attemptStatus) {
         status = reg.attemptStatus.toUpperCase().replace('_', ' ');
         scoreStr = reg.score !== null ? `${reg.score} / ${totalQuestions}` : 'In Progress / Terminated';
+        r2Str = reg.round2Score !== null && reg.round2Score !== undefined ? reg.round2Score.toString() : '-';
+        r3Str = reg.round3Score !== null && reg.round3Score !== undefined ? reg.round3Score.toString() : '-';
         warningsStr = reg.warningsCount?.toString() || '0';
         startStr = reg.startedAt ? new Date(reg.startedAt).toLocaleString() : '';
         endStr = reg.endedAt ? new Date(reg.endedAt).toLocaleString() : '';
@@ -63,6 +71,8 @@ export async function GET() {
         `"${reg.phone || ''}"`,
         `"${status}"`,
         `"${scoreStr}"`,
+        `"${r2Str}"`,
+        `"${r3Str}"`,
         `"${warningsStr}"`,
         `"${startStr}"`,
         `"${endStr}"`
