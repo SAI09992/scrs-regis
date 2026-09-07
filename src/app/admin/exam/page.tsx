@@ -414,6 +414,7 @@ export default function AdminExamPage() {
               <table className="w-full text-left text-xs font-mono whitespace-nowrap">
                 <thead className="bg-cyber-surface/50 border-b border-cyber-border text-cyber-text-dim">
                   <tr>
+                    <th className="p-4 font-bold w-12 text-center text-cyber-text-muted">#</th>
                     <th className="p-4 font-bold">CADET / REG ID</th>
                     <th className="p-4 font-bold">STATUS</th>
                     <th className="p-4 font-bold">R1 (QUIZ)</th>
@@ -424,8 +425,11 @@ export default function AdminExamPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-cyber-border/50">
-                  {attempts.map((attempt) => (
+                  {attempts.map((attempt, index) => (
                     <tr key={attempt.internalRegId} className="hover:bg-cyber-surface/30">
+                      <td className="p-4 font-bold text-cyber-text-muted text-center border-r border-cyber-border/30">
+                        {index + 1}
+                      </td>
                       <td className="p-4">
                         <div className="font-bold text-cyber-text">{attempt.name}</div>
                         <div className="text-[10px] text-cyber-text-muted">{attempt.registrationId}</div>
